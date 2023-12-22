@@ -88,12 +88,25 @@ public sealed class Inventory
             return false;
         }
 
-        newItem = new InventoryItem()
+        if (item is BackpackInventoryItemSO backpackStaticItem)
         {
-            Id = Guid.NewGuid().ToString(),
-            GridPosition = new Vector2Int(x, y),
-            Item = item,
-        };
+            var backpackItem = new BackpackInventoryItem
+            {
+                Inventory = new Inventory(
+                    backpackStaticItem.BackpackWidth,
+                    backpackStaticItem.BackpackHeight
+                )
+            };
+            newItem = backpackItem;
+        }
+        else
+        {
+            newItem = new InventoryItem();
+        }
+
+        newItem.Id = Guid.NewGuid().ToString();
+        newItem.GridPosition = new Vector2Int(x, y);
+        newItem.ItemId = item.Id;
 
         Items.Add(newItem);
 

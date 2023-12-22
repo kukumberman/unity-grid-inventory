@@ -1,14 +1,16 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <ui:VisualElement style="width: 100%; height: 100%;">
         <ui:VisualElement name="window" style="left: 125px; top: 125px; width: 500px;">
-            <ui:VisualElement name="titlebar" style="height: 50px; width: 100%; background-color: rgb(255, 255, 255); flex-direction: row; justify-content: space-between; align-items: center;">
+            <ui:VisualElement name="titlebar" style="height: 50px; width: 100%; background-color: rgb(255, 255, 255); flex-direction: row; justify-content: space-between; align-items: center; display: none;">
                 <ui:Label text="Inventory" style="-unity-text-align: middle-left; height: 100%; font-size: 30px; margin-left: 25px;" />
                 <ui:Button text="X" style="background-color: rgb(255, 0, 0); color: rgb(255, 255, 255); width: 25px; height: 25px; margin-right: 10px;" />
             </ui:VisualElement>
-            <ui:ScrollView style="width: 500px;">
-                <ui:VisualElement name="ve-cells-content" style="width: 200px; height: 200px; flex-direction: row; flex-wrap: wrap;" />
-                <ui:VisualElement name="ve-items-content" style="position: absolute; width: 100%; height: 100%;" />
-            </ui:ScrollView>
+            <InventoryGridCollectionElement name="inventory-stash">
+                <ui:ScrollView style="width: 500px;">
+                    <ui:VisualElement name="ve-cells-content" style="width: 200px; height: 200px; flex-direction: row; flex-wrap: wrap;" />
+                    <ui:VisualElement name="ve-items-content" style="position: absolute; width: 100%; height: 100%;" />
+                </ui:ScrollView>
+            </InventoryGridCollectionElement>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

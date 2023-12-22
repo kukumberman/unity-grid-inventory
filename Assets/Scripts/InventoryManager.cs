@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public sealed class InventoryManager : MonoBehaviour
 {
+    public static InventoryManager Singleton { get; private set; }
+
     [SerializeField]
     private InventoryView _view;
 
@@ -9,9 +12,22 @@ public sealed class InventoryManager : MonoBehaviour
     private Vector2Int _gridSize;
 
     [SerializeField]
+    private List<InventoryItemSO> _allItems;
+
+    [SerializeField]
     private InventoryItemSO _debugItem;
 
     private Inventory _inventory;
+
+    private void Awake()
+    {
+        Singleton = this;
+    }
+
+    private void OnDestroy()
+    {
+        Singleton = null;
+    }
 
     private void Start()
     {
@@ -31,6 +47,18 @@ public sealed class InventoryManager : MonoBehaviour
         }
     }
 
+    public InventoryItemSO GetStaticItemById(string id)
+    {
+        return _allItems.Find(item => item.Id == id);
+    }
+
+    public InventoryItem GetDynamicItemById(string id)
+    {
+        // todo: search inner inventories
+
+        return _inventory.Items.Find(item => item.Id == id);
+    }
+
     [ContextMenu(nameof(AddDebugItem))]
     private void AddDebugItem()
     {
@@ -41,7 +69,7 @@ public sealed class InventoryManager : MonoBehaviour
     {
         if (_inventory.RemoveItemById(id))
         {
-            _view.RemoveItemElementByUniqueId(id);
+            _view.RemoveItemElementByDynamicId(id);
         }
     }
 
