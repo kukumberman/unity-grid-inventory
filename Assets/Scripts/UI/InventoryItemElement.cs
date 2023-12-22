@@ -9,6 +9,23 @@ public sealed class InventoryItemElement : VisualElement
     private Label _nameLabel;
 
     private Vector2 _pixelSize;
+    private bool _isRotated;
+
+    public string DynamicId
+    {
+        get => name;
+        set => name = value;
+    }
+
+    public bool IsRotated
+    {
+        get => _isRotated;
+        set
+        {
+            _isRotated = value;
+            SetRotated(_isRotated);
+        }
+    }
 
     public void Setup(int cellSize, Vector2Int itemGridSize)
     {

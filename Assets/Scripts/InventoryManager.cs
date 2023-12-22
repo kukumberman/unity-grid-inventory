@@ -73,7 +73,7 @@ public sealed class InventoryManager : MonoBehaviour
         }
     }
 
-    public void OnInventoryItemDragged(string id, Vector2Int gridPosition)
+    public void OnInventoryItemDragged(string id, Vector2Int gridPosition, bool rotated)
     {
         var inventoryItem = _inventory.Items.Find(item => item.Id == id);
 
@@ -82,26 +82,31 @@ public sealed class InventoryManager : MonoBehaviour
             return;
         }
 
-        var w = inventoryItem.Item.Width;
-        var h = inventoryItem.Item.Height;
+        var item = inventoryItem.Item;
+        var width = !rotated ? item.Width : item.Height;
+        var height = !rotated ? item.Height : item.Width;
 
         var allowed = _inventory.IsAreaEmptyOrOccupiedByItem(
             gridPosition.x,
             gridPosition.y,
-            w,
-            h,
+            width,
+            height,
             inventoryItem
         );
 
-        _view.MarkCellsArea(gridPosition.x, gridPosition.y, w, h, allowed);
+        _view.MarkCellsArea(gridPosition.x, gridPosition.y, width, height, allowed);
     }
 
-    public void OnInventoryItemDropped(string id, Vector2Int gridPosition)
+    public void OnInventoryItemDropped(string id, Vector2Int gridPosition, bool rotated)
     {
-        if (_inventory.MoveItemByIdTo(id, gridPosition.x, gridPosition.y))
+        if (_inventory.MoveItemByIdTo(id, gridPosition.x, gridPosition.y, rotated))
         {
             var inventoryItem = _inventory.Items.Find(item => item.Id == id);
-            _view.PlaceDraggedElementAt(inventoryItem.GridPosition.x, inventoryItem.GridPosition.y);
+            _view.PlaceDraggedElementAt(
+                inventoryItem.GridPosition.x,
+                inventoryItem.GridPosition.y,
+                inventoryItem.IsRotated
+            );
         }
         else
         {

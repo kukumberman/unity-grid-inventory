@@ -8,10 +8,10 @@ public sealed class InventoryView : MonoBehaviour
     private UnityEvent<string> _onInventoryElementClicked;
 
     [SerializeField]
-    private UnityEvent<string, Vector2Int> _onInventoryItemDragged;
+    private UnityEvent<string, Vector2Int, bool> _onInventoryItemDragged;
 
     [SerializeField]
-    private UnityEvent<string, Vector2Int> _onInventoryItemDropped;
+    private UnityEvent<string, Vector2Int, bool> _onInventoryItemDropped;
 
     [SerializeField]
     private UIDocument _document;
@@ -38,10 +38,20 @@ public sealed class InventoryView : MonoBehaviour
     private Vector2 _targetPosition;
     private Vector2Int _draggableGridPosition;
 
+    private bool _cachedRotatedState;
+
     public InventoryGridCollectionElement Stash => _inventoryStashElement;
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (_draggableElement != null)
+            {
+                _draggableElement.IsRotated = !_draggableElement.IsRotated;
+            }
+        }
+
         UpdateDragValues();
 
         if (_draggableElement != null)
@@ -73,7 +83,7 @@ public sealed class InventoryView : MonoBehaviour
         element.SetTitle(inventoryItem.Item.Id);
         element.SetRotated(inventoryItem.IsRotated);
 
-        element.name = inventoryItem.Id;
+        element.DynamicId = inventoryItem.Id;
 
         element.RegisterCallback<ClickEvent>(ClickHandler);
         element.RegisterCallback<PointerDownEvent>(PointerDownHandler);
@@ -89,13 +99,15 @@ public sealed class InventoryView : MonoBehaviour
         _inventoryStashElement.RemoveItemElementByDynamicId(id);
     }
 
-    public void PlaceDraggedElementAt(int x, int y)
+    public void PlaceDraggedElementAt(int x, int y, bool rotated)
     {
         _inventoryStashElement.ResetCellsColor();
 
         var position = Vector2.zero;
         position.x = x * _cellSize;
         position.y = y * _cellSize;
+
+        _draggableElement.IsRotated = rotated;
 
         MoveDraggableElementTo(position);
     }
@@ -106,6 +118,8 @@ public sealed class InventoryView : MonoBehaviour
         {
             return;
         }
+
+        _draggableElement.IsRotated = _cachedRotatedState;
 
         MoveDraggableElementTo(_cachedPosition);
     }
@@ -154,7 +168,11 @@ public sealed class InventoryView : MonoBehaviour
 
         _draggableGridPosition = _inventoryStashElement.ScreenPositionToGrid(_targetPosition);
 
-        _onInventoryItemDragged.Invoke(element.name, _draggableGridPosition);
+        _onInventoryItemDragged.Invoke(
+            element.DynamicId,
+            _draggableGridPosition,
+            _draggableElement.IsRotated
+        );
     }
 
     private void ClickHandler(ClickEvent evt)
@@ -162,8 +180,8 @@ public sealed class InventoryView : MonoBehaviour
         if (evt.ctrlKey)
         {
             var element = evt.currentTarget as VisualElement;
-            var id = element.name;
-            _onInventoryElementClicked.Invoke(id);
+            var inventoryItemElement = element as InventoryItemElement;
+            _onInventoryElementClicked.Invoke(inventoryItemElement.DynamicId);
         }
     }
 
@@ -183,6 +201,7 @@ public sealed class InventoryView : MonoBehaviour
         target.CapturePointer(evt.pointerId);
 
         _draggableElement = target as InventoryItemElement;
+        _cachedRotatedState = _draggableElement.IsRotated;
         var elementWorldPosition = _draggableElement.worldTransform.GetPosition();
         _cachedPosition.x = _draggableElement.resolvedStyle.left;
         _cachedPosition.y = _draggableElement.resolvedStyle.top;
@@ -201,7 +220,10 @@ public sealed class InventoryView : MonoBehaviour
 
         if (evt.button == 1)
         {
-            var dynamicItem = InventoryManager.Singleton.GetDynamicItemById(target.name);
+            var inventoryItemElement = target as InventoryItemElement;
+            var dynamicItem = InventoryManager.Singleton.GetDynamicItemById(
+                inventoryItemElement.DynamicId
+            );
 
             if (
                 dynamicItem is BackpackInventoryItem backpackItem
@@ -222,7 +244,11 @@ public sealed class InventoryView : MonoBehaviour
             return;
         }
 
-        _onInventoryItemDropped.Invoke(_draggableElement.name, _draggableGridPosition);
+        _onInventoryItemDropped.Invoke(
+            _draggableElement.DynamicId,
+            _draggableGridPosition,
+            _draggableElement.IsRotated
+        );
     }
 
     private void PointerMoveHandler(PointerMoveEvent evt)

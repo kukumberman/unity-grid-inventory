@@ -44,7 +44,25 @@ public sealed class Inventory
                     continue;
                 }
 
-                if (AddItemAt(item, x, y, out newItem))
+                if (AddItemAt(item, x, y, false, out newItem))
+                {
+                    return true;
+                }
+            }
+        }
+
+        for (var y = 0; y < _height; y++)
+        {
+            for (var x = 0; x < _width; x++)
+            {
+                var index = _grid.GridToIndex(x, y);
+
+                if (_cells[index] != null)
+                {
+                    continue;
+                }
+
+                if (AddItemAt(item, x, y, true, out newItem))
                 {
                     return true;
                 }
@@ -54,16 +72,25 @@ public sealed class Inventory
         return false;
     }
 
-    public bool AddItemAt(InventoryItemSO item, int x, int y, out InventoryItem newItem)
+    public bool AddItemAt(
+        InventoryItemSO item,
+        int x,
+        int y,
+        bool rotated,
+        out InventoryItem newItem
+    )
     {
         newItem = null;
+
+        var width = !rotated ? item.Width : item.Height;
+        var height = !rotated ? item.Height : item.Width;
 
         var maxCount = item.Width * item.Height;
         var indexes = new List<int>();
 
-        for (var i = 0; i < item.Width; i++)
+        for (var i = 0; i < width; i++)
         {
-            for (var j = 0; j < item.Height; j++)
+            for (var j = 0; j < height; j++)
             {
                 var xx = x + i;
                 var yy = y + j;
@@ -107,6 +134,7 @@ public sealed class Inventory
         newItem.Id = Guid.NewGuid().ToString();
         newItem.GridPosition = new Vector2Int(x, y);
         newItem.ItemId = item.Id;
+        newItem.IsRotated = rotated;
 
         Items.Add(newItem);
 
@@ -177,7 +205,7 @@ public sealed class Inventory
         return true;
     }
 
-    public bool MoveItemByIdTo(string id, int x, int y)
+    public bool MoveItemByIdTo(string id, int x, int y, bool rotated)
     {
         var inventoryItem = Items.Find(item => item.Id == id);
 
@@ -186,10 +214,11 @@ public sealed class Inventory
             return false;
         }
 
-        var w = inventoryItem.Item.Width;
-        var h = inventoryItem.Item.Height;
+        var item = inventoryItem.Item;
+        var width = !rotated ? item.Width : item.Height;
+        var height = !rotated ? item.Height : item.Width;
 
-        if (!IsAreaEmptyOrOccupiedByItem(x, y, w, h, inventoryItem))
+        if (!IsAreaEmptyOrOccupiedByItem(x, y, width, height, inventoryItem))
         {
             return false;
         }
@@ -207,12 +236,14 @@ public sealed class Inventory
         inventoryItem.GridPosition.x = x;
         inventoryItem.GridPosition.y = y;
 
-        PopulateIndexes(x, y, w, h, indexes);
+        PopulateIndexes(x, y, width, height, indexes);
 
         foreach (var idx in indexes)
         {
             _cells[idx] = inventoryItem;
         }
+
+        inventoryItem.IsRotated = rotated;
 
         return true;
     }
