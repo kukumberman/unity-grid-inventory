@@ -113,7 +113,8 @@ public sealed class InventoryManager : MonoBehaviour
     {
         if (_inventory.AddItem(item, out var newItem))
         {
-            _view.CreateItemAt(newItem.GridPosition, newItem, newItem.IsRotated);
+            var itemElement = _view.CreateItemAt(newItem.GridPosition, newItem);
+            _view.Stash.AddItemElement(itemElement);
         }
     }
 }

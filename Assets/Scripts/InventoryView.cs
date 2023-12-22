@@ -23,6 +23,9 @@ public sealed class InventoryView : MonoBehaviour
     private VisualTreeAsset _itemUxmlPrefab;
 
     [SerializeField]
+    private VisualTreeAsset _windowUxmlPrefab;
+
+    [SerializeField]
     private int _cellSize;
 
     private InventoryGridCollectionElement _inventoryStashElement;
@@ -34,6 +37,8 @@ public sealed class InventoryView : MonoBehaviour
     private Vector2 _screenPosition;
     private Vector2 _targetPosition;
     private Vector2Int _draggableGridPosition;
+
+    public InventoryGridCollectionElement Stash => _inventoryStashElement;
 
     private void Update()
     {
@@ -52,13 +57,10 @@ public sealed class InventoryView : MonoBehaviour
         );
         _inventoryStashElement.Setup(_cellSize);
         _inventoryStashElement.CreateGrid(gridSize, CreateCell);
+        _inventoryStashElement.FitWidth();
     }
 
-    public void CreateItemAt(
-        Vector2Int gridPosition,
-        InventoryItem inventoryItem,
-        bool rotated = false
-    )
+    public InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
     {
         var element = _itemUxmlPrefab.Instantiate()[0] as InventoryItemElement;
 
@@ -69,7 +71,7 @@ public sealed class InventoryView : MonoBehaviour
         element.Setup(_cellSize, inventoryItem.Item.GridSize);
         element.SetSprite(inventoryItem.Item.Sprite);
         element.SetTitle(inventoryItem.Item.Id);
-        element.SetRotated(rotated);
+        element.SetRotated(inventoryItem.IsRotated);
 
         element.name = inventoryItem.Id;
 
@@ -79,7 +81,7 @@ public sealed class InventoryView : MonoBehaviour
         element.RegisterCallback<PointerCaptureOutEvent>(PointerCaptureOutHandler);
         element.RegisterCallback<PointerMoveEvent>(PointerMoveHandler);
 
-        _inventoryStashElement.AddItemElement(element);
+        return element;
     }
 
     public void RemoveItemElementByDynamicId(string id)
@@ -201,11 +203,12 @@ public sealed class InventoryView : MonoBehaviour
         {
             var dynamicItem = InventoryManager.Singleton.GetDynamicItemById(target.name);
 
-            if (dynamicItem.Item is BackpackInventoryItemSO backpackItem)
+            if (
+                dynamicItem is BackpackInventoryItem backpackItem
+                && dynamicItem.Item is BackpackInventoryItemSO backpackStaticItem
+            )
             {
-                Debug.Log(backpackItem.name);
-
-                // todo: create window and populate items
+                CreateBackpackWindow(backpackItem);
             }
         }
     }
@@ -231,5 +234,33 @@ public sealed class InventoryView : MonoBehaviour
             //UpdateDragValues();
             //HandleDrag(target);
         }
+    }
+
+    private void CreateBackpackWindow(BackpackInventoryItem backpackItem)
+    {
+        var backpackStaticItem = backpackItem.Item as BackpackInventoryItemSO;
+
+        var windowElement = _windowUxmlPrefab.Instantiate()[0] as InventoryWindowElement;
+
+        windowElement.Setup();
+        windowElement.GridCollection.Setup(_cellSize);
+        windowElement.GridCollection.CreateGrid(backpackStaticItem.BackpackGridSize, CreateCell);
+        windowElement.GridCollection.FitWidthAndHeight();
+        windowElement.MakeAbsolute();
+        windowElement.SetScreenPosition(100, 100);
+        windowElement.UpdateWidth();
+        windowElement.SetTitle(backpackStaticItem.Id);
+
+        for (int i = 0; i < backpackItem.Inventory.Items.Count; i++)
+        {
+            var itemElement = CreateItemAt(
+                backpackItem.GridPosition,
+                backpackItem.Inventory.Items[i]
+            );
+
+            windowElement.GridCollection.AddItemElement(itemElement);
+        }
+
+        _document.rootVisualElement.Add(windowElement);
     }
 }

@@ -7,9 +7,6 @@ public sealed class InventoryGridCollectionElement : VisualElement
 {
     public new class UxmlFactory : UxmlFactory<InventoryGridCollectionElement, UxmlTraits> { }
 
-    // todo
-    private int _visibleGridHeight = 7;
-
     private int _cellSize;
 
     private ScrollView _scrollView;
@@ -19,6 +16,9 @@ public sealed class InventoryGridCollectionElement : VisualElement
     private Grid2D _grid;
     private List<VisualElement> _cells;
 
+    public int TotalPixelWidth { get; private set; }
+    public Vector2 PixelGridSize { get; private set; }
+
     public void Setup(int cellSize)
     {
         _cellSize = cellSize;
@@ -27,6 +27,8 @@ public sealed class InventoryGridCollectionElement : VisualElement
     public void CreateGrid(Vector2Int gridSize, Func<VisualElement> cellFactory)
     {
         _scrollView = this.Q<ScrollView>();
+        _scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+
         var scrollContent = _scrollView.Q<VisualElement>("unity-content-container");
         _cellsContentParentElement = scrollContent[0];
         _itemsContentParentElement = scrollContent[1];
@@ -37,7 +39,7 @@ public sealed class InventoryGridCollectionElement : VisualElement
         }
 
         var pixelGridWidth = gridSize.x * _cellSize;
-        var pixelGridHeight = _visibleGridHeight * _cellSize;
+        var pixelGridHeight = gridSize.y * _cellSize;
 
         _cellsContentParentElement.style.width = new StyleLength(
             new Length(pixelGridWidth, LengthUnit.Pixel)
@@ -49,9 +51,6 @@ public sealed class InventoryGridCollectionElement : VisualElement
         var totalPixelWidth = pixelGridWidth + 24;
 
         _scrollView.style.width = new StyleLength(new Length(totalPixelWidth, LengthUnit.Pixel));
-        _scrollView.style.height = _cellsContentParentElement.style.height;
-
-        style.width = _scrollView.style.width;
 
         var cellCount = gridSize.x * gridSize.y;
 
@@ -64,6 +63,27 @@ public sealed class InventoryGridCollectionElement : VisualElement
             _cellsContentParentElement.Add(element);
             _cells.Add(element);
         }
+
+        TotalPixelWidth = totalPixelWidth;
+        PixelGridSize = new Vector2(pixelGridWidth, pixelGridHeight);
+    }
+
+    public void FitWidthAndHeight()
+    {
+        FitWidth();
+        FitHeight();
+    }
+
+    public void FitWidth()
+    {
+        _scrollView.style.width = new StyleLength(new Length(TotalPixelWidth, LengthUnit.Pixel));
+        style.width = _scrollView.style.width;
+    }
+
+    public void FitHeight()
+    {
+        _scrollView.style.height = new StyleLength(new Length(PixelGridSize.y, LengthUnit.Pixel));
+        style.height = _scrollView.style.height;
     }
 
     public void AddItemElement(InventoryItemElement element)
