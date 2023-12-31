@@ -227,6 +227,11 @@ public sealed class InventoryManager : MonoBehaviour
                 return false;
             }
 
+            if (inventoryItem == backpackItem)
+            {
+                return false;
+            }
+
             destinationInventory = backpackItem.Inventory;
         }
         else
