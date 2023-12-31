@@ -58,8 +58,8 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
         {
             var backpackInventoryItem = new BackpackInventoryItem();
             backpackInventoryItem.Inventory = new Inventory(
-                backpackItem.Width,
-                backpackItem.Height
+                backpackItem.BackpackGridSize.x,
+                backpackItem.BackpackGridSize.y
             );
 
             var jObjectInventory = jObject[nameof(BackpackInventoryItem.Inventory)];
@@ -69,12 +69,17 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
             )
             {
                 var innerInventoryItem = Deserialize(innerObject);
-                backpackInventoryItem.Inventory.AddExistingItemAt(
+                var added = backpackInventoryItem.Inventory.AddExistingItemAt(
                     innerInventoryItem,
                     innerInventoryItem.GridPosition.x,
                     innerInventoryItem.GridPosition.y,
                     innerInventoryItem.IsRotated
                 );
+
+                if (!added)
+                {
+                    Debug.LogWarning(innerInventoryItem.Id);
+                }
             }
 
             inventoryItem = backpackInventoryItem;
