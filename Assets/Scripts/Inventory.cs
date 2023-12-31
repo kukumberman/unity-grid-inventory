@@ -14,6 +14,11 @@ public sealed class Inventory
     private readonly int _width;
     private readonly int _height;
 
+    /// <summary>
+    /// This constructor is used by Newtonsoft.Json to create empty instance, please avoid of using this constructor.
+    /// </summary>
+    public Inventory() { }
+
     public Inventory(int width, int height)
     {
         _width = width;

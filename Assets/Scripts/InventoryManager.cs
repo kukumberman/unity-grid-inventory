@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
+using Newtonsoft.Json;
 
 public sealed class InventoryManager : MonoBehaviour
 {
@@ -21,6 +23,9 @@ public sealed class InventoryManager : MonoBehaviour
     [SerializeField]
     private InventoryItemSO _debugItem,
         _debugItem2;
+
+    [SerializeField]
+    private bool _loadOnStart;
 
     private Inventory _inventory;
 
@@ -48,6 +53,10 @@ public sealed class InventoryManager : MonoBehaviour
         AddDebugItem(_debugItem);
         AddDebugItem(_debugItem);
 
+        if (_loadOnStart)
+        {
+            Load();
+        }
     }
 
     private void Update()
@@ -269,4 +278,63 @@ public sealed class InventoryManager : MonoBehaviour
             }
         }
     }
+
+    #region Serialize / Deserialize
+    private string JsonStringifyInventory()
+    {
+        return JsonConvert.SerializeObject(
+            _inventory,
+            new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                Formatting = Formatting.Indented,
+            }
+        );
+    }
+
+    [ContextMenu(nameof(Save))]
+    private void Save()
+    {
+        var path = GetSavePath();
+        var json = JsonStringifyInventory();
+        File.WriteAllText(path, json);
+    }
+
+    [ContextMenu(nameof(Load))]
+    private void Load()
+    {
+        var path = GetSavePath();
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        var json = File.ReadAllText(path);
+        var uninitializedInventory = JsonConvert.DeserializeObject<Inventory>(json);
+
+        _inventory = new Inventory(_gridSize);
+
+        for (int i = 0; i < uninitializedInventory.Items.Count; i++)
+        {
+            var item = uninitializedInventory.Items[i];
+            _inventory.AddExistingItemAt(
+                item,
+                item.GridPosition.x,
+                item.GridPosition.y,
+                item.IsRotated
+            );
+        }
+
+        if (Application.isPlaying)
+        {
+            _view.Stash.Bind(_inventory);
+            _view.Stash.Sync();
+        }
+    }
+
+    private static string GetSavePath()
+    {
+        return Path.Combine(Application.persistentDataPath, "inventory.json");
+    }
+    #endregion
 }

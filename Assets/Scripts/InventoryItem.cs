@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
+using Newtonsoft.Json;
 
+[JsonConverter(typeof(JsonConverterInventoryItem))]
 public class InventoryItem
 {
     public string Id;
@@ -14,6 +16,7 @@ public class InventoryItem
         return Id.GetHashCode();
     }
 
+    [JsonIgnore]
     public InventoryItemSO Item
     {
         get
