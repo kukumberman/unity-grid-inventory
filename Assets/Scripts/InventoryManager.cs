@@ -169,11 +169,16 @@ public sealed class InventoryManager : MonoBehaviour
             destinationInventory = _inventory;
         }
 
-        if (destinationInventory.AddItem(inventoryItem.Item, out var _))
+        if (destinationInventory.Contains(inventoryItem))
+        {
+            Debug.LogWarning("can't transfer item from same inventory (ok?)");
+            return false;
+        }
+
+        if (destinationInventory.AddExistingItem(inventoryItem))
         {
             if (parentInventory.RemoveItemById(inventoryItem.Id, out var _))
             {
-                // todo: PROBLEM - "destinationInventory" does not keep state of existing item but creates new item (for example empty backpack)
                 return true;
             }
             else
@@ -232,18 +237,16 @@ public sealed class InventoryManager : MonoBehaviour
         else
         {
             if (
-                destinationInventory.AddItemAt(
-                    inventoryItem.Item,
+                destinationInventory.AddExistingItemAt(
+                    inventoryItem,
                     gridPosition.x,
                     gridPosition.y,
-                    rotated,
-                    out var _
+                    rotated
                 )
             )
             {
                 if (parentInventory.RemoveItemById(inventoryItem.Id, out var _))
                 {
-                    // todo: PROBLEM - "destinationInventory" does not keep state of existing item but creates new item (for example empty backpack)
                     return true;
                 }
                 else

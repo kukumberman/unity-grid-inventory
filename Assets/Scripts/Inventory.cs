@@ -153,6 +153,128 @@ public sealed class Inventory
         return true;
     }
 
+    public bool AddExistingItem(InventoryItem inventoryItem)
+    {
+        if (inventoryItem == null)
+        {
+            throw new ArgumentNullException();
+        }
+
+        if (Contains(inventoryItem))
+        {
+            throw new ArgumentException();
+        }
+
+        var item = inventoryItem.Item;
+
+        if (item.Width * item.Height > _width * _height)
+        {
+            return false;
+        }
+
+        for (var y = 0; y < _height; y++)
+        {
+            for (var x = 0; x < _width; x++)
+            {
+                var index = _grid.GridToIndex(x, y);
+
+                if (_cells[index] != null)
+                {
+                    continue;
+                }
+
+                if (AddExistingItemAt(inventoryItem, x, y, false))
+                {
+                    return true;
+                }
+            }
+        }
+
+        for (var y = 0; y < _height; y++)
+        {
+            for (var x = 0; x < _width; x++)
+            {
+                var index = _grid.GridToIndex(x, y);
+
+                if (_cells[index] != null)
+                {
+                    continue;
+                }
+
+                if (AddExistingItemAt(inventoryItem, x, y, true))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public bool AddExistingItemAt(InventoryItem inventoryItem, int x, int y, bool rotated)
+    {
+        if (inventoryItem == null)
+        {
+            throw new ArgumentNullException();
+        }
+
+        if (Contains(inventoryItem))
+        {
+            throw new ArgumentException();
+        }
+
+        var item = inventoryItem.Item;
+        var width = !rotated ? item.Width : item.Height;
+        var height = !rotated ? item.Height : item.Width;
+
+        var maxCount = item.Width * item.Height;
+        var indexes = new List<int>();
+
+        for (var i = 0; i < width; i++)
+        {
+            for (var j = 0; j < height; j++)
+            {
+                var xx = x + i;
+                var yy = y + j;
+
+                if (xx >= _width || yy >= _height)
+                {
+                    continue;
+                }
+
+                var index = _grid.GridToIndex(xx, yy);
+                if (_cells[index] != null)
+                {
+                    continue;
+                }
+
+                indexes.Add(index);
+            }
+        }
+
+        if (indexes.Count != maxCount)
+        {
+            return false;
+        }
+
+        inventoryItem.GridPosition = new Vector2Int(x, y);
+        inventoryItem.IsRotated = rotated;
+
+        Items.Add(inventoryItem);
+
+        DispatchCollectionChangedEvent();
+
+        // todo: avoid allocation
+        _cellsMap.Add(inventoryItem, indexes.ToArray());
+
+        foreach (var idx in indexes)
+        {
+            _cells[idx] = inventoryItem;
+        }
+
+        return true;
+    }
+
     public bool IsAreaEmptyOrOccupiedByItem(
         int x,
         int y,
@@ -256,6 +378,11 @@ public sealed class Inventory
         DispatchCollectionChangedEvent();
 
         return true;
+    }
+
+    public bool Contains(InventoryItem inventoryItem)
+    {
+        return Items.Contains(inventoryItem);
     }
 
     private void PopulateIndexes(int x, int y, int width, int height, int[] array)
