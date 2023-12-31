@@ -23,7 +23,7 @@ public sealed class InventoryItemElement : VisualElement
         set
         {
             _isRotated = value;
-            SetRotated(_isRotated);
+            RefreshRotatedState(_isRotated);
         }
     }
 
@@ -51,7 +51,7 @@ public sealed class InventoryItemElement : VisualElement
         style.top = new StyleLength(new Length(position.y, LengthUnit.Pixel));
     }
 
-    public void SetRotated(bool rotated)
+    private void RefreshRotatedState(bool rotated)
     {
         var pixelWidth = !rotated ? _pixelSize.x : _pixelSize.y;
         var pixelHeight = !rotated ? _pixelSize.y : _pixelSize.x;

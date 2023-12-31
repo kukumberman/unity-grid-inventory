@@ -384,6 +384,7 @@ MonoBehaviour:
   _itemUxmlPrefab: {fileID: 9197481963319205126, guid: 7cb024d50073eb94f987ac2034afb036, type: 3}
   _windowUxmlPrefab: {fileID: 9197481963319205126, guid: f4c9efddf55d4494598fa1f0a904c5ac, type: 3}
   _cellSize: 100
+  _processDragInUpdate: 1
 --- !u!4 &1171798836
 Transform:
   m_ObjectHideFlags: 0

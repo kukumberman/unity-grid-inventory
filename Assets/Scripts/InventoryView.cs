@@ -19,6 +19,9 @@ public sealed class InventoryView : MonoBehaviour
     [SerializeField]
     private int _cellSize;
 
+    [SerializeField]
+    private bool _processDragInUpdate;
+
     private InventoryGridCollectionElement _inventoryStashElement;
 
     private InventoryItemElement _draggableElement;
@@ -45,13 +48,13 @@ public sealed class InventoryView : MonoBehaviour
             if (_draggableElement != null)
             {
                 _draggableElement.IsRotated = !_draggableElement.IsRotated;
+                HandleDrag(_draggableElement);
             }
         }
 
-        UpdateDragValues();
-
-        if (_draggableElement != null)
+        if (_processDragInUpdate && _draggableElement != null)
         {
+            UpdateDragValues();
             HandleDrag(_draggableElement);
         }
     }
@@ -94,7 +97,7 @@ public sealed class InventoryView : MonoBehaviour
         element.Setup(_cellSize, inventoryItem.Item.GridSize);
         element.SetSprite(inventoryItem.Item.Sprite);
         element.SetTitle(inventoryItem.Item.Id);
-        element.SetRotated(inventoryItem.IsRotated);
+        element.IsRotated = inventoryItem.IsRotated;
 
         element.DynamicId = inventoryItem.Id;
 
@@ -140,7 +143,7 @@ public sealed class InventoryView : MonoBehaviour
         _draggableGridPosition = Vector2Int.zero;
     }
 
-    public void ResetColorOfAllAvailableCells()
+    private void ResetColorOfAllAvailableCells()
     {
         PopulateGridCollectionsElements();
 
@@ -318,6 +321,7 @@ public sealed class InventoryView : MonoBehaviour
                 if (_windowMap.TryGetValue(backpackItem, out var windowElement))
                 {
                     windowElement.SetScreenPosition(evt.position);
+                    windowElement.BringToFront();
                 }
                 else
                 {
@@ -417,8 +421,11 @@ public sealed class InventoryView : MonoBehaviour
 
         if (target.HasPointerCapture(evt.pointerId))
         {
-            //UpdateDragValues();
-            //HandleDrag(target);
+            if (target is InventoryItemElement itemElement && !_processDragInUpdate)
+            {
+                UpdateDragValues();
+                HandleDrag(itemElement);
+            }
         }
     }
 
