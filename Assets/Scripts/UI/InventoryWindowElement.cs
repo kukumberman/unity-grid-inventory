@@ -59,8 +59,8 @@ public sealed class InventoryWindowElement : VisualElement
             target.CapturePointer(evt.pointerId);
 
             _dragStartPosition = evt.position;
-            _targetPositionOnDragStart = target.parent.transform.position;
-
+            _targetPositionOnDragStart.x = target.parent.resolvedStyle.left;
+            _targetPositionOnDragStart.y = target.parent.resolvedStyle.top;
             BringToFront();
         }
     }
@@ -85,8 +85,12 @@ public sealed class InventoryWindowElement : VisualElement
         var target = evt.currentTarget as VisualElement;
         if (target.HasPointerCapture(evt.pointerId))
         {
+            Debug.Assert(target.parent == this);
+
             var deltaPosition = evt.position - _dragStartPosition;
-            target.parent.transform.position = _targetPositionOnDragStart + deltaPosition;
+            var position = _targetPositionOnDragStart + deltaPosition;
+            target.parent.style.left = new StyleLength(new Length(position.x, LengthUnit.Pixel));
+            target.parent.style.top = new StyleLength(new Length(position.y, LengthUnit.Pixel));
         }
     }
 }
