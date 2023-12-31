@@ -35,10 +35,10 @@ public sealed class InventoryWindowElement : VisualElement
         style.position = new StyleEnum<Position>(Position.Absolute);
     }
 
-    public void SetScreenPosition(int x, int y)
+    public void SetScreenPosition(Vector2 position)
     {
-        style.left = new StyleLength(new Length(x, LengthUnit.Pixel));
-        style.top = new StyleLength(new Length(y, LengthUnit.Pixel));
+        style.left = new StyleLength(new Length(position.x, LengthUnit.Pixel));
+        style.top = new StyleLength(new Length(position.y, LengthUnit.Pixel));
     }
 
     public void SetTitle(string title)

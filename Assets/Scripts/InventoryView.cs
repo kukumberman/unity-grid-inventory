@@ -1,18 +1,9 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UIElements;
 
 public sealed class InventoryView : MonoBehaviour
 {
-    [SerializeField]
-    private UnityEvent<string> _onInventoryElementClicked;
-
-    [SerializeField]
-    private UnityEvent<string, Vector2Int, bool> _onInventoryItemDragged;
-
-    [SerializeField]
-    private UnityEvent<string, Vector2Int, bool> _onInventoryItemDropped;
-
     [SerializeField]
     private UIDocument _document;
 
@@ -39,6 +30,11 @@ public sealed class InventoryView : MonoBehaviour
     private Vector2Int _draggableGridPosition;
 
     private bool _cachedRotatedState;
+    private VisualElement _cachedParentElement;
+
+    private VisualElement _backpackWindowsContentParentElement;
+    private List<InventoryGridCollectionElement> _listOfGridCollectionElements = new();
+    private Dictionary<BackpackInventoryItem, InventoryWindowElement> _windowMap = new();
 
     public InventoryGridCollectionElement Stash => _inventoryStashElement;
 
@@ -60,17 +56,34 @@ public sealed class InventoryView : MonoBehaviour
         }
     }
 
+    public void OnItemRemovedEventHandler(InventoryItem inventoryItem)
+    {
+        if (inventoryItem is BackpackInventoryItem backpackItem)
+        {
+            if (_windowMap.TryGetValue(backpackItem, out var windowElement))
+            {
+                _windowMap.Remove(backpackItem);
+
+                windowElement.RemoveFromHierarchy();
+            }
+        }
+    }
+
     public void CreateGrid(Vector2Int gridSize)
     {
         _inventoryStashElement = _document.rootVisualElement.Q<InventoryGridCollectionElement>(
             "inventory-stash"
         );
         _inventoryStashElement.Setup(_cellSize);
-        _inventoryStashElement.CreateGrid(gridSize, CreateCell);
+        _inventoryStashElement.CreateGrid(gridSize, CreateCell, CreateItem);
         _inventoryStashElement.FitWidth();
+
+        _backpackWindowsContentParentElement = _document.rootVisualElement.Q<VisualElement>(
+            "ve-backpack-windows-content"
+        );
     }
 
-    public InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
+    private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
     {
         var element = _itemUxmlPrefab.Instantiate()[0] as InventoryItemElement;
 
@@ -94,25 +107,22 @@ public sealed class InventoryView : MonoBehaviour
         return element;
     }
 
-    public void RemoveItemElementByDynamicId(string id)
+    private InventoryItemElement CreateItem(InventoryItem inventoryItem)
     {
-        _inventoryStashElement.RemoveItemElementByDynamicId(id);
+        return CreateItemAt(inventoryItem.GridPosition, inventoryItem);
     }
 
-    public void PlaceDraggedElementAt(int x, int y, bool rotated)
+    private void DestroyDraggedElement()
     {
         _inventoryStashElement.ResetCellsColor();
-
-        var position = Vector2.zero;
-        position.x = x * _cellSize;
-        position.y = y * _cellSize;
-
-        _draggableElement.IsRotated = rotated;
-
-        MoveDraggableElementTo(position);
+        _draggableElement.RemoveFromHierarchy();
+        _draggableElement = null;
+        _cachedPosition = Vector2.zero;
+        _clickRelativeOffset = Vector2.zero;
+        _draggableGridPosition = Vector2Int.zero;
     }
 
-    public void ResetDraggedElement()
+    private void ResetDraggedElement()
     {
         if (_draggableElement == null)
         {
@@ -120,13 +130,33 @@ public sealed class InventoryView : MonoBehaviour
         }
 
         _draggableElement.IsRotated = _cachedRotatedState;
+        _draggableElement.SetScreenPosition(_cachedPosition);
+        _cachedParentElement.Add(_draggableElement);
 
-        MoveDraggableElementTo(_cachedPosition);
+        _cachedParentElement = null;
+        _draggableElement = null;
+        _cachedPosition = Vector2.zero;
+        _clickRelativeOffset = Vector2.zero;
+        _draggableGridPosition = Vector2Int.zero;
     }
 
-    public void MarkCellsArea(int x, int y, int width, int height, bool allowed)
+    public void ResetColorOfAllAvailableCells()
     {
-        _inventoryStashElement.MarkCellsArea(x, y, width, height, allowed);
+        PopulateGridCollectionsElements();
+
+        foreach (var gridElement in _listOfGridCollectionElements)
+        {
+            gridElement.ResetCellsColor();
+        }
+    }
+
+    public void MarkCellsArea(string inventoryId, int x, int y, int width, int height, bool allowed)
+    {
+        var gridElement = _listOfGridCollectionElements.Find(
+            element => element.DynamicId == inventoryId
+        );
+        gridElement.ResetCellsColor();
+        gridElement.MarkCellsArea(x, y, width, height, allowed);
     }
 
     private VisualElement CreateCell()
@@ -138,20 +168,6 @@ public sealed class InventoryView : MonoBehaviour
         element.style.height = new StyleLength(new Length(_cellSize, LengthUnit.Pixel));
 
         return element;
-    }
-
-    private void MoveDraggableElementTo(Vector2 pixelPosition)
-    {
-        _inventoryStashElement.ResetCellsColor();
-
-        _draggableElement.SetScreenPosition(pixelPosition);
-
-        _inventoryStashElement.AddItemElement(_draggableElement);
-
-        _draggableElement = null;
-        _cachedPosition = Vector2.zero;
-        _clickRelativeOffset = Vector2.zero;
-        _draggableGridPosition = Vector2Int.zero;
     }
 
     private void UpdateDragValues()
@@ -166,12 +182,77 @@ public sealed class InventoryView : MonoBehaviour
     {
         element.SetScreenPosition(_targetPosition);
 
-        _draggableGridPosition = _inventoryStashElement.ScreenPositionToGrid(_targetPosition);
+        InventoryGridCollectionElement inventoryGridElement = null;
+        PopulateGridCollectionsElements();
 
-        _onInventoryItemDragged.Invoke(
-            element.DynamicId,
-            _draggableGridPosition,
-            _draggableElement.IsRotated
+        foreach (var gridElement in _listOfGridCollectionElements)
+        {
+            if (gridElement.InsideRect(_screenPosition))
+            {
+                inventoryGridElement = gridElement;
+                break;
+            }
+        }
+
+        if (inventoryGridElement == null)
+        {
+            Debug.Log("todo: outside");
+            return;
+        }
+
+        _draggableGridPosition = inventoryGridElement.ScreenPositionToGrid(_targetPosition);
+
+        var rotated = _draggableElement.IsRotated;
+
+        Inventory inventory;
+        if (inventoryGridElement.DynamicId != null)
+        {
+            var dynamicItemDropTarget = InventoryManager.Singleton.GetDynamicItemById(
+                inventoryGridElement.DynamicId
+            );
+
+            if (
+                dynamicItemDropTarget == null
+                || dynamicItemDropTarget is not BackpackInventoryItem backpackItem
+            )
+            {
+                return;
+            }
+
+            inventory = backpackItem.Inventory;
+        }
+        else
+        {
+            inventory = InventoryManager.Singleton.RootInventory;
+        }
+
+        var inventoryItem = InventoryManager.Singleton.GetDynamicItemById(element.DynamicId);
+
+        if (inventoryItem == null)
+        {
+            return;
+        }
+
+        var item = inventoryItem.Item;
+        var width = !rotated ? item.Width : item.Height;
+        var height = !rotated ? item.Height : item.Width;
+
+        var allowed = inventory.IsAreaEmptyOrOccupiedByItem(
+            _draggableGridPosition.x,
+            _draggableGridPosition.y,
+            width,
+            height,
+            inventoryItem
+        );
+
+        ResetColorOfAllAvailableCells();
+        MarkCellsArea(
+            inventoryGridElement.DynamicId,
+            _draggableGridPosition.x,
+            _draggableGridPosition.y,
+            width,
+            height,
+            allowed
         );
     }
 
@@ -181,7 +262,7 @@ public sealed class InventoryView : MonoBehaviour
         {
             var element = evt.currentTarget as VisualElement;
             var inventoryItemElement = element as InventoryItemElement;
-            _onInventoryElementClicked.Invoke(inventoryItemElement.DynamicId);
+            InventoryManager.Singleton.TryRemoveItem(inventoryItemElement.DynamicId);
         }
     }
 
@@ -202,6 +283,7 @@ public sealed class InventoryView : MonoBehaviour
 
         _draggableElement = target as InventoryItemElement;
         _cachedRotatedState = _draggableElement.IsRotated;
+        _cachedParentElement = _draggableElement.parent;
         var elementWorldPosition = _draggableElement.worldTransform.GetPosition();
         _cachedPosition.x = _draggableElement.resolvedStyle.left;
         _cachedPosition.y = _draggableElement.resolvedStyle.top;
@@ -216,6 +298,9 @@ public sealed class InventoryView : MonoBehaviour
         if (target.HasPointerCapture(evt.pointerId))
         {
             target.ReleasePointer(evt.pointerId);
+
+            MouseDragReleased(evt);
+            return;
         }
 
         if (evt.button == 1)
@@ -230,12 +315,21 @@ public sealed class InventoryView : MonoBehaviour
                 && dynamicItem.Item is BackpackInventoryItemSO backpackStaticItem
             )
             {
-                CreateBackpackWindow(backpackItem);
+                if (_windowMap.TryGetValue(backpackItem, out var windowElement))
+                {
+                    windowElement.SetScreenPosition(evt.position);
+                }
+                else
+                {
+                    CreateBackpackWindow(backpackItem, evt.position);
+                }
             }
         }
     }
 
-    private void PointerCaptureOutHandler(PointerCaptureOutEvent evt)
+    private void PointerCaptureOutHandler(PointerCaptureOutEvent evt) { }
+
+    private void MouseDragReleased(PointerUpEvent evt)
     {
         var target = evt.currentTarget as VisualElement;
 
@@ -244,11 +338,77 @@ public sealed class InventoryView : MonoBehaviour
             return;
         }
 
-        _onInventoryItemDropped.Invoke(
+        // todo: ignore transfer when released above backpack item but on different cell
+        foreach (var itemElement in _inventoryStashElement.ItemElements)
+        {
+            if (!itemElement.InsideRect(evt.position))
+            {
+                continue;
+            }
+
+            var targetDynamicItem = InventoryManager.Singleton.GetDynamicItemById(
+                itemElement.DynamicId
+            );
+
+            if (targetDynamicItem is not BackpackInventoryItem backpackItem)
+            {
+                continue;
+            }
+
+            var transferedSuccessfully = InventoryManager.Singleton.TransferItemToInventory(
+                _draggableElement.DynamicId,
+                backpackItem.Id
+            );
+
+            Debug.Log($"transferedSuccessfully: {transferedSuccessfully}");
+
+            if (transferedSuccessfully)
+            {
+                DestroyDraggedElement();
+            }
+            else
+            {
+                ResetDraggedElement();
+            }
+
+            ResetColorOfAllAvailableCells();
+
+            return;
+        }
+
+        PopulateGridCollectionsElements();
+
+        var gridElementUnderMouse = _listOfGridCollectionElements.Find(
+            x => x.InsideRect(_screenPosition)
+        );
+
+        if (gridElementUnderMouse == null)
+        {
+            Debug.Log("todo? released outside mouse");
+            ResetDraggedElement();
+            ResetColorOfAllAvailableCells();
+            return;
+        }
+
+        var result = InventoryManager.Singleton.MoveItemToInventory(
             _draggableElement.DynamicId,
+            gridElementUnderMouse.DynamicId,
             _draggableGridPosition,
             _draggableElement.IsRotated
         );
+
+        Debug.Log(result);
+
+        if (result)
+        {
+            DestroyDraggedElement();
+        }
+        else
+        {
+            ResetDraggedElement();
+        }
+
+        ResetColorOfAllAvailableCells();
     }
 
     private void PointerMoveHandler(PointerMoveEvent evt)
@@ -262,7 +422,21 @@ public sealed class InventoryView : MonoBehaviour
         }
     }
 
-    private void CreateBackpackWindow(BackpackInventoryItem backpackItem)
+    private void PopulateGridCollectionsElements()
+    {
+        _listOfGridCollectionElements.Clear();
+
+        _listOfGridCollectionElements.Add(_inventoryStashElement);
+
+        _backpackWindowsContentParentElement
+            .Query<InventoryWindowElement>()
+            .Children<InventoryGridCollectionElement>()
+            .ToList(_listOfGridCollectionElements);
+
+        _listOfGridCollectionElements.Reverse();
+    }
+
+    private void CreateBackpackWindow(BackpackInventoryItem backpackItem, Vector2 position)
     {
         var backpackStaticItem = backpackItem.Item as BackpackInventoryItemSO;
 
@@ -270,23 +444,27 @@ public sealed class InventoryView : MonoBehaviour
 
         windowElement.Setup();
         windowElement.GridCollection.Setup(_cellSize);
-        windowElement.GridCollection.CreateGrid(backpackStaticItem.BackpackGridSize, CreateCell);
+        windowElement.GridCollection.CreateGrid(
+            backpackStaticItem.BackpackGridSize,
+            CreateCell,
+            CreateItem
+        );
         windowElement.GridCollection.FitWidthAndHeight();
+        windowElement.GridCollection.Bind(backpackItem.Inventory);
+        windowElement.GridCollection.Sync();
+        windowElement.GridCollection.DynamicId = backpackItem.Id;
         windowElement.MakeAbsolute();
-        windowElement.SetScreenPosition(100, 100);
+        windowElement.SetScreenPosition(position);
         windowElement.UpdateWidth();
         windowElement.SetTitle(backpackStaticItem.Id);
 
-        for (int i = 0; i < backpackItem.Inventory.Items.Count; i++)
-        {
-            var itemElement = CreateItemAt(
-                backpackItem.GridPosition,
-                backpackItem.Inventory.Items[i]
-            );
-
-            windowElement.GridCollection.AddItemElement(itemElement);
-        }
-
-        _document.rootVisualElement.Add(windowElement);
+        _backpackWindowsContentParentElement.Add(windowElement);
+        _windowMap.Add(backpackItem, windowElement);
+        windowElement.RegisterCallback<DetachFromPanelEvent>(
+            (evt) =>
+            {
+                _windowMap.Remove(backpackItem);
+            }
+        );
     }
 }

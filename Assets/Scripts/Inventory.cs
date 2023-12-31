@@ -4,6 +4,8 @@ using UnityEngine;
 
 public sealed class Inventory
 {
+    public event Action<Inventory> OnCollectionChanged;
+
     public List<InventoryItem> Items = new();
     private readonly InventoryItem[] _cells;
     private readonly Dictionary<InventoryItem, int[]> _cellsMap;
@@ -138,6 +140,8 @@ public sealed class Inventory
 
         Items.Add(newItem);
 
+        DispatchCollectionChangedEvent();
+
         // todo: avoid allocation
         _cellsMap.Add(newItem, indexes.ToArray());
 
@@ -184,15 +188,17 @@ public sealed class Inventory
         return freeCount == totalCount;
     }
 
-    public bool RemoveItemById(string id)
+    public bool RemoveItemById(string id, out InventoryItem inventoryItem)
     {
+        inventoryItem = null;
+
         var itemIndex = Items.FindIndex(item => item.Id == id);
         if (itemIndex == -1)
         {
             return false;
         }
 
-        var inventoryItem = Items[itemIndex];
+        inventoryItem = Items[itemIndex];
         _cellsMap.Remove(inventoryItem, out var indexes);
 
         foreach (var idx in indexes)
@@ -201,6 +207,8 @@ public sealed class Inventory
         }
 
         Items.RemoveAt(itemIndex);
+
+        DispatchCollectionChangedEvent();
 
         return true;
     }
@@ -245,6 +253,8 @@ public sealed class Inventory
 
         inventoryItem.IsRotated = rotated;
 
+        DispatchCollectionChangedEvent();
+
         return true;
     }
 
@@ -262,5 +272,10 @@ public sealed class Inventory
                 array[counter++] = idx;
             }
         }
+    }
+
+    private void DispatchCollectionChangedEvent()
+    {
+        OnCollectionChanged?.Invoke(this);
     }
 }

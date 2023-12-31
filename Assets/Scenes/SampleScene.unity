@@ -379,51 +379,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37746635c69e888409e1a445e2df9bf4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _onInventoryElementClicked:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1171798837}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnInventoryItemClicked
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  _onInventoryItemDragged:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1171798837}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnInventoryItemDragged
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  _onInventoryItemDropped:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 1171798837}
-        m_TargetAssemblyTypeName: InventoryManager, Assembly-CSharp
-        m_MethodName: OnInventoryItemDropped
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
   _document: {fileID: 315460945}
   _cellSprite: {fileID: 21300000, guid: 202b273e6dec4514287c79d8605ee1f5, type: 3}
   _itemUxmlPrefab: {fileID: 9197481963319205126, guid: 7cb024d50073eb94f987ac2034afb036, type: 3}
@@ -456,10 +411,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fa8d9ef9c3e69cb4585d051270c8e606, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _onItemRemoved:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1171798835}
+        m_TargetAssemblyTypeName: InventoryView, Assembly-CSharp
+        m_MethodName: OnItemRemovedEventHandler
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   _view: {fileID: 1171798835}
   _gridSize: {x: 5, y: 10}
   _allItems:
   - {fileID: 11400000, guid: f1d811695e855ca48b700bf27cd62240, type: 2}
   - {fileID: 11400000, guid: f88f91a8f2d7f434ea0caaedbe88ba59, type: 2}
   - {fileID: 11400000, guid: 4bd711902e601f64697758d312d6deda, type: 2}
-  _debugItem: {fileID: 11400000, guid: f1d811695e855ca48b700bf27cd62240, type: 2}
+  _debugItem: {fileID: 11400000, guid: 4bd711902e601f64697758d312d6deda, type: 2}
+  _debugItem2: {fileID: 11400000, guid: f88f91a8f2d7f434ea0caaedbe88ba59, type: 2}

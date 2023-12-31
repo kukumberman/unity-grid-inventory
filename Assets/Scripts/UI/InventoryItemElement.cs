@@ -70,4 +70,11 @@ public sealed class InventoryItemElement : VisualElement
         var left = rotated ? _pixelSize.y : 0;
         _imageElement.style.left = new StyleLength(new Length(left, LengthUnit.Pixel));
     }
+
+    public bool InsideRect(Vector2 position)
+    {
+        var rect = contentRect;
+        rect.position = worldTransform.GetPosition();
+        return rect.Contains(position);
+    }
 }

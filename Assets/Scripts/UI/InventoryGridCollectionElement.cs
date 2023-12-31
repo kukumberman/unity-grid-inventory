@@ -16,16 +16,40 @@ public sealed class InventoryGridCollectionElement : VisualElement
     private Grid2D _grid;
     private List<VisualElement> _cells;
 
+    private Func<InventoryItem, InventoryItemElement> _itemFactory;
+    private Inventory _inventory;
+
+    public string DynamicId
+    {
+        get => name;
+        set => name = value;
+    }
+
     public int TotalPixelWidth { get; private set; }
     public Vector2 PixelGridSize { get; private set; }
+
+    public List<InventoryItemElement> ItemElements
+    {
+        get
+        {
+            // todo: avoid memory allocation
+            return _itemsContentParentElement.Query<InventoryItemElement>().ToList();
+        }
+    }
 
     public void Setup(int cellSize)
     {
         _cellSize = cellSize;
     }
 
-    public void CreateGrid(Vector2Int gridSize, Func<VisualElement> cellFactory)
+    public void CreateGrid(
+        Vector2Int gridSize,
+        Func<VisualElement> cellFactory,
+        Func<InventoryItem, InventoryItemElement> itemFactory
+    )
     {
+        _itemFactory = itemFactory;
+
         _scrollView = this.Q<ScrollView>();
         _scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
 
@@ -86,21 +110,6 @@ public sealed class InventoryGridCollectionElement : VisualElement
         style.height = _scrollView.style.height;
     }
 
-    public void AddItemElement(InventoryItemElement element)
-    {
-        _itemsContentParentElement.Add(element);
-    }
-
-    public void RemoveItemElementByDynamicId(string id)
-    {
-        var element = _itemsContentParentElement.Q<VisualElement>(id);
-
-        if (element != null)
-        {
-            element.RemoveFromHierarchy();
-        }
-    }
-
     public Vector2Int ScreenPositionToGrid(Vector2 position)
     {
         var snapPosition = position;
@@ -125,8 +134,6 @@ public sealed class InventoryGridCollectionElement : VisualElement
 
     public void MarkCellsArea(int x, int y, int width, int height, bool allowed)
     {
-        ResetCellsColor();
-
         var color = allowed ? Color.green : Color.red;
 
         for (int i = 0; i < width; i++)
@@ -153,6 +160,45 @@ public sealed class InventoryGridCollectionElement : VisualElement
         for (int i = 0, length = _cells.Count; i < length; i++)
         {
             _cells[i].style.unityBackgroundImageTintColor = Color.white;
+        }
+    }
+
+    public bool InsideRect(Vector2 position)
+    {
+        return this.LocalToWorld(contentRect).Contains(position);
+    }
+
+    public void Bind(Inventory inventory)
+    {
+        Unbind();
+
+        _inventory = inventory;
+        _inventory.OnCollectionChanged += Inventory_OnCollectionChanged;
+    }
+
+    public void Unbind()
+    {
+        if (_inventory != null)
+        {
+            _inventory.OnCollectionChanged -= Inventory_OnCollectionChanged;
+        }
+    }
+
+    public void Sync()
+    {
+        Inventory_OnCollectionChanged(_inventory);
+    }
+
+    private void Inventory_OnCollectionChanged(Inventory inventory)
+    {
+        // todo: better way to update visual state
+
+        _itemsContentParentElement.Clear();
+
+        for (int i = 0; i < inventory.Items.Count; i++)
+        {
+            var newElement = _itemFactory(inventory.Items[i]);
+            _itemsContentParentElement.Add(newElement);
         }
     }
 }
