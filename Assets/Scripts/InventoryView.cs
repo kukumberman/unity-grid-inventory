@@ -63,6 +63,22 @@ public sealed class InventoryView : MonoBehaviour
     {
         if (inventoryItem is BackpackInventoryItem backpackItem)
         {
+            var list = new List<InventoryItem>();
+            backpackItem.Inventory.GetItemsDeeplyNonAlloc(list);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] is BackpackInventoryItem innerBackpackItem)
+                {
+                    if (_windowMap.TryGetValue(innerBackpackItem, out var innerWindowElement))
+                    {
+                        _windowMap.Remove(innerBackpackItem);
+
+                        innerWindowElement.RemoveFromHierarchy();
+                    }
+                }
+            }
+
             if (_windowMap.TryGetValue(backpackItem, out var windowElement))
             {
                 _windowMap.Remove(backpackItem);

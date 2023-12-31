@@ -385,6 +385,38 @@ public sealed class Inventory
         return Items.Contains(inventoryItem);
     }
 
+    public void GetItemsDeeplyNonAlloc(List<InventoryItem> results)
+    {
+        var stack = new Stack<BackpackInventoryItem>();
+
+        for (int i = 0; i < Items.Count; i++)
+        {
+            results.Add(Items[i]);
+
+            if (Items[i] is BackpackInventoryItem backpackItem)
+            {
+                stack.Push(backpackItem);
+            }
+        }
+
+        while (stack.Count > 0)
+        {
+            var backpackItem = stack.Pop();
+
+            for (int i = 0; i < backpackItem.Inventory.Items.Count; i++)
+            {
+                var innerItem = backpackItem.Inventory.Items[i];
+
+                results.Add(innerItem);
+
+                if (innerItem is BackpackInventoryItem innerBackpackItem)
+                {
+                    stack.Push(innerBackpackItem);
+                }
+            }
+        }
+    }
+
     private void PopulateIndexes(int x, int y, int width, int height, int[] array)
     {
         var counter = 0;
