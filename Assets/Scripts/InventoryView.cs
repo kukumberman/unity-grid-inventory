@@ -101,6 +101,12 @@ public sealed class InventoryView : MonoBehaviour
         _backpackWindowsContentParentElement = _document.rootVisualElement.Q<VisualElement>(
             "ve-backpack-windows-content"
         );
+
+        var btnSave = _document.rootVisualElement.Q<Button>("btn-save");
+        var btnLoad = _document.rootVisualElement.Q<Button>("btn-load");
+
+        btnSave.clicked += () => InventoryManager.Singleton.Save();
+        btnLoad.clicked += () => InventoryManager.Singleton.Load();
     }
 
     private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)

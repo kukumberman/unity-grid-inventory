@@ -298,7 +298,7 @@ public sealed class InventoryManager : MonoBehaviour
     }
 
     [ContextMenu(nameof(Save))]
-    private void Save()
+    public void Save()
     {
         var path = GetSavePath();
         var json = JsonStringifyInventory();
@@ -306,7 +306,7 @@ public sealed class InventoryManager : MonoBehaviour
     }
 
     [ContextMenu(nameof(Load))]
-    private void Load()
+    public void Load()
     {
         var path = GetSavePath();
         if (!File.Exists(path))
