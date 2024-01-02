@@ -38,6 +38,7 @@ public sealed class InventoryView : MonoBehaviour
     private VisualElement _backpackWindowsContentParentElement;
     private List<InventoryGridCollectionElement> _listOfGridCollectionElements = new();
     private Dictionary<BackpackInventoryItem, InventoryWindowElement> _windowMap = new();
+    private List<InventoryItemElement> _listOfAllItemElements = new();
 
     public InventoryGridCollectionElement Stash => _inventoryStashElement;
 
@@ -358,8 +359,16 @@ public sealed class InventoryView : MonoBehaviour
             return;
         }
 
-        // todo: ignore transfer when released above backpack item but on different cell
-        foreach (var itemElement in _inventoryStashElement.ItemElements)
+        PopulateGridCollectionsElements();
+
+        _listOfAllItemElements.Clear();
+
+        for (int i = 0; i < _listOfGridCollectionElements.Count; i++)
+        {
+            _listOfAllItemElements.AddRange(_listOfGridCollectionElements[i].ItemElements);
+        }
+
+        foreach (var itemElement in _listOfAllItemElements)
         {
             if (!itemElement.InsideRect(evt.position))
             {

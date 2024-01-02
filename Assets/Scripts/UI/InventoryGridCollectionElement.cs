@@ -18,6 +18,7 @@ public sealed class InventoryGridCollectionElement : VisualElement
 
     private Func<InventoryItem, InventoryItemElement> _itemFactory;
     private Inventory _inventory;
+    private List<InventoryItemElement> _listOfItemElements = new();
 
     public string DynamicId
     {
@@ -32,8 +33,9 @@ public sealed class InventoryGridCollectionElement : VisualElement
     {
         get
         {
-            // todo: avoid memory allocation
-            return _itemsContentParentElement.Query<InventoryItemElement>().ToList();
+            _listOfItemElements.Clear();
+            _itemsContentParentElement.Query<InventoryItemElement>().ToList(_listOfItemElements);
+            return _listOfItemElements;
         }
     }
 
