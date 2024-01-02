@@ -38,7 +38,7 @@ public sealed class InventoryView : MonoBehaviour
     private VisualElement _backpackWindowsContentParentElement;
     private List<InventoryGridCollectionElement> _listOfGridCollectionElements = new();
     private Dictionary<BackpackInventoryItem, InventoryWindowElement> _windowMap = new();
-    private List<InventoryItemElement> _listOfAllItemElements = new();
+    private List<VisualElement> _pickResults = new();
 
     public InventoryGridCollectionElement Stash => _inventoryStashElement;
 
@@ -192,6 +192,7 @@ public sealed class InventoryView : MonoBehaviour
         element.style.backgroundImage = new StyleBackground(_cellSprite);
         element.style.width = new StyleLength(new Length(_cellSize, LengthUnit.Pixel));
         element.style.height = new StyleLength(new Length(_cellSize, LengthUnit.Pixel));
+        element.AddToClassList("cell");
 
         return element;
     }
@@ -365,85 +366,25 @@ public sealed class InventoryView : MonoBehaviour
             return;
         }
 
-        PopulateGridCollectionsElements();
-
-        _listOfAllItemElements.Clear();
-
-        for (int i = 0; i < _listOfGridCollectionElements.Count; i++)
-        {
-            _listOfAllItemElements.AddRange(_listOfGridCollectionElements[i].ItemElements);
-        }
-
-        foreach (var itemElement in _listOfAllItemElements)
-        {
-            if (!itemElement.InsideRect(evt.position))
-            {
-                continue;
-            }
-
-            var targetDynamicItem = InventoryManager.Singleton.GetDynamicItemById(
-                itemElement.DynamicId
-            );
-
-            if (targetDynamicItem is not BackpackInventoryItem backpackItem)
-            {
-                continue;
-            }
-
-            var transferedSuccessfully = InventoryManager.Singleton.TransferItemToInventory(
-                _draggableElement.DynamicId,
-                backpackItem.Id
-            );
-
-            Debug.Log($"transferedSuccessfully: {transferedSuccessfully}");
-
-            if (transferedSuccessfully)
-            {
-                DestroyDraggedElement();
-            }
-            else
-            {
-                ResetDraggedElement();
-            }
-
-            ResetColorOfAllAvailableCells();
-
-            return;
-        }
-
-        PopulateGridCollectionsElements();
-
-        var gridElementUnderMouse = _listOfGridCollectionElements.Find(
-            x => x.InsideRect(_screenPosition)
+        GetElementUnderMouse(
+            evt.position,
+            out var gridElementUnderMouse,
+            out var itemElementUnderMouse
         );
 
-        if (gridElementUnderMouse == null)
+        if (itemElementUnderMouse != null)
         {
-            Debug.Log("todo? released outside mouse");
-            ResetDraggedElement();
-            ResetColorOfAllAvailableCells();
-            return;
+            HandleMouseReleasedDropOnItem(itemElementUnderMouse);
         }
-
-        var result = InventoryManager.Singleton.MoveItemToInventory(
-            _draggableElement.DynamicId,
-            gridElementUnderMouse.DynamicId,
-            _draggableGridPosition,
-            _draggableElement.IsRotated
-        );
-
-        Debug.Log(result);
-
-        if (result)
+        else if (gridElementUnderMouse != null)
         {
-            DestroyDraggedElement();
+            HandleMouseReleasedDropOnGrid(gridElementUnderMouse);
         }
         else
         {
             ResetDraggedElement();
+            ResetColorOfAllAvailableCells();
         }
-
-        ResetColorOfAllAvailableCells();
     }
 
     private void PointerMoveHandler(PointerMoveEvent evt)
@@ -504,5 +445,114 @@ public sealed class InventoryView : MonoBehaviour
                 _windowMap.Remove(backpackItem);
             }
         );
+    }
+
+    private bool GetElementUnderMouse(
+        Vector2 position,
+        out InventoryGridCollectionElement gridElementUnderMouse,
+        out InventoryItemElement itemElementUnderMouse
+    )
+    {
+        gridElementUnderMouse = null;
+        itemElementUnderMouse = null;
+
+        _pickResults.Clear();
+
+        _document.rootVisualElement.panel.PickAll(position, _pickResults);
+
+        foreach (var element in _pickResults)
+        {
+            if (element == _draggableElement)
+            {
+                continue;
+            }
+
+            if (element is InventoryItemElement itemElement)
+            {
+                itemElementUnderMouse = itemElement;
+                return true;
+            }
+
+            if (element.ClassListContains("cell"))
+            {
+                var currentParent = element.parent;
+
+                while (true)
+                {
+                    if (currentParent == null)
+                    {
+                        break;
+                    }
+
+                    if (currentParent is InventoryGridCollectionElement gridElement)
+                    {
+                        gridElementUnderMouse = gridElement;
+                        return true;
+                    }
+
+                    currentParent = currentParent.parent;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void HandleMouseReleasedDropOnItem(InventoryItemElement itemElementUnderMouse)
+    {
+        var targetDynamicItem = InventoryManager.Singleton.GetDynamicItemById(
+            itemElementUnderMouse.DynamicId
+        );
+
+        if (targetDynamicItem == null)
+        {
+            return;
+        }
+
+        if (targetDynamicItem is not BackpackInventoryItem backpackItem)
+        {
+            return;
+        }
+
+        var transferedSuccessfully = InventoryManager.Singleton.TransferItemToInventory(
+            _draggableElement.DynamicId,
+            backpackItem.Id
+        );
+
+        Debug.Log($"transferedSuccessfully: {transferedSuccessfully}");
+
+        if (transferedSuccessfully)
+        {
+            DestroyDraggedElement();
+        }
+        else
+        {
+            ResetDraggedElement();
+        }
+
+        ResetColorOfAllAvailableCells();
+    }
+
+    private void HandleMouseReleasedDropOnGrid(InventoryGridCollectionElement gridElementUnderMouse)
+    {
+        var result = InventoryManager.Singleton.MoveItemToInventory(
+            _draggableElement.DynamicId,
+            gridElementUnderMouse.DynamicId,
+            _draggableGridPosition,
+            _draggableElement.IsRotated
+        );
+
+        Debug.Log(result);
+
+        if (result)
+        {
+            DestroyDraggedElement();
+        }
+        else
+        {
+            ResetDraggedElement();
+        }
+
+        ResetColorOfAllAvailableCells();
     }
 }
