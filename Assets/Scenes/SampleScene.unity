@@ -383,6 +383,7 @@ MonoBehaviour:
   _cellSprite: {fileID: 21300000, guid: 202b273e6dec4514287c79d8605ee1f5, type: 3}
   _itemUxmlPrefab: {fileID: 9197481963319205126, guid: 7cb024d50073eb94f987ac2034afb036, type: 3}
   _windowUxmlPrefab: {fileID: 9197481963319205126, guid: f4c9efddf55d4494598fa1f0a904c5ac, type: 3}
+  _scrollItemUxmlPrefab: {fileID: 9197481963319205126, guid: 1d7660d1a5b50f34cb95732a041c74cc, type: 3}
   _cellSize: 100
   _processDragInUpdate: 1
 --- !u!4 &1171798836
@@ -429,10 +430,5 @@ MonoBehaviour:
         m_CallState: 2
   _view: {fileID: 1171798835}
   _gridSize: {x: 5, y: 10}
-  _allItems:
-  - {fileID: 11400000, guid: f1d811695e855ca48b700bf27cd62240, type: 2}
-  - {fileID: 11400000, guid: f88f91a8f2d7f434ea0caaedbe88ba59, type: 2}
-  - {fileID: 11400000, guid: 4bd711902e601f64697758d312d6deda, type: 2}
-  _debugItem: {fileID: 11400000, guid: 4bd711902e601f64697758d312d6deda, type: 2}
-  _debugItem2: {fileID: 11400000, guid: f88f91a8f2d7f434ea0caaedbe88ba59, type: 2}
+  _itemCollection: {fileID: 11400000, guid: 14da950c7dc3b204e9298ce05e6a6569, type: 2}
   _loadOnStart: 1

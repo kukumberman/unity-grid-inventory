@@ -17,6 +17,9 @@ public sealed class InventoryView : MonoBehaviour
     private VisualTreeAsset _windowUxmlPrefab;
 
     [SerializeField]
+    private VisualTreeAsset _scrollItemUxmlPrefab;
+
+    [SerializeField]
     private int _cellSize;
 
     [SerializeField]
@@ -107,6 +110,8 @@ public sealed class InventoryView : MonoBehaviour
 
         btnSave.clicked += () => InventoryManager.Singleton.Save();
         btnLoad.clicked += () => InventoryManager.Singleton.Load();
+
+        CreateScrollList();
     }
 
     private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
@@ -554,5 +559,47 @@ public sealed class InventoryView : MonoBehaviour
         }
 
         ResetColorOfAllAvailableCells();
+    }
+
+    private void CreateScrollList()
+    {
+        var scrollView = _document.rootVisualElement.Q<ScrollView>("item-scroll-list");
+        scrollView.contentContainer.Clear();
+
+        scrollView.verticalScrollerVisibility = ScrollerVisibility.AlwaysVisible;
+
+        var collection = InventoryManager.Singleton.ItemCollection;
+
+        for (int i = 0, length = collection.Items.Count; i < length; i++)
+        {
+            var element = _scrollItemUxmlPrefab.Instantiate()[0] as InventoryItemScrollElement;
+            foreach (var styleSheet in _scrollItemUxmlPrefab.stylesheets)
+            {
+                element.styleSheets.Add(styleSheet);
+            }
+
+            var staticItem = collection.Items[i];
+            element.Setup(staticItem.Sprite, staticItem.Id);
+            element.DynamicId = staticItem.Id;
+
+            element.RegisterCallback<ClickEvent>(ClickHandlerFoo);
+
+            scrollView.contentContainer.Add(element);
+        }
+    }
+
+    private void ClickHandlerFoo(ClickEvent evt)
+    {
+        if (evt.currentTarget is InventoryItemScrollElement scrollElement)
+        {
+            var staticItem = InventoryManager.Singleton.GetStaticItemById(scrollElement.DynamicId);
+
+            if (staticItem == null)
+            {
+                return;
+            }
+
+            InventoryManager.Singleton.AddItem(staticItem);
+        }
     }
 }

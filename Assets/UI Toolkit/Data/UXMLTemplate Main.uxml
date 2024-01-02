@@ -11,5 +11,6 @@
             <ui:Button text="Save" name="btn-save" style="height: 50px; font-size: 30px;" />
             <ui:Button text="Load" name="btn-load" style="height: 50px; font-size: 30px;" />
         </ui:VisualElement>
+        <ui:ScrollView name="item-scroll-list" style="position: absolute; right: 0; bottom: 0; width: 400px; height: 500px;" />
     </ui:VisualElement>
 </ui:UXML>

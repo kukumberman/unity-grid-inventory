@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: '[BackpackInventoryItemSO] backpack'
   m_EditorClassIdentifier: 
   _id: Backpack
-  _gridSize: {x: 3, y: 3}
+  _gridSize: {x: 3, y: 4}
   _sprite: {fileID: 21300000, guid: 0ce8b90944dc00444ae0c9e546e88de6, type: 3}
-  _backpackGridSize: {x: 3, y: 3}
+  _backpackGridSize: {x: 3, y: 4}

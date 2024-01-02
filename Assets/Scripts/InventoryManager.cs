@@ -18,11 +18,7 @@ public sealed class InventoryManager : MonoBehaviour
     private Vector2Int _gridSize;
 
     [SerializeField]
-    private List<InventoryItemSO> _allItems;
-
-    [SerializeField]
-    private InventoryItemSO _debugItem,
-        _debugItem2;
+    private InventoryItemCollectionSO _itemCollection;
 
     [SerializeField]
     private bool _loadOnStart;
@@ -30,6 +26,7 @@ public sealed class InventoryManager : MonoBehaviour
     private Inventory _inventory;
 
     public Inventory RootInventory => _inventory;
+    public InventoryItemCollectionSO ItemCollection => _itemCollection;
 
     private void Awake()
     {
@@ -50,9 +47,6 @@ public sealed class InventoryManager : MonoBehaviour
         // todo: temp solution, it should be null since it is referenced as "destinationInventoryId" and compared to null is this class
         _view.Stash.DynamicId = null;
 
-        AddDebugItem(_debugItem);
-        AddDebugItem(_debugItem);
-
         if (_loadOnStart)
         {
             Load();
@@ -69,7 +63,7 @@ public sealed class InventoryManager : MonoBehaviour
 
     public InventoryItemSO GetStaticItemById(string id)
     {
-        return _allItems.Find(item => item.Id == id);
+        return _itemCollection.Items.Find(item => item.Id == id);
     }
 
     public InventoryItem GetDynamicItemById(string id)
@@ -127,7 +121,7 @@ public sealed class InventoryManager : MonoBehaviour
     [ContextMenu(nameof(AddDebugItem))]
     private void AddDebugItem()
     {
-        AddDebugItem(_debugItem);
+        AddItem(_itemCollection.Items[0]);
     }
 
     public bool TryRemoveItem(string id)
@@ -273,15 +267,9 @@ public sealed class InventoryManager : MonoBehaviour
         return false;
     }
 
-    private void AddDebugItem(InventoryItemSO item)
+    public bool AddItem(InventoryItemSO item)
     {
-        if (_inventory.AddItem(item, out var newItem))
-        {
-            if (newItem is BackpackInventoryItem backpackItem)
-            {
-                backpackItem.Inventory.AddItem(_debugItem2, out var _);
-            }
-        }
+        return _inventory.AddItem(item, out var _);
     }
 
     #region Serialize / Deserialize

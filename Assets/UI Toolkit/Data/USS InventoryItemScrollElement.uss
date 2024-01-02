@@ -1,0 +1,12 @@
+.item-scroll-element
+{
+	border-width: 2px;
+	border-color: rgba(128, 128, 128, 255);
+	padding: 10px;
+	background-color: rgba(200, 200, 200, 255);
+}
+
+.item-scroll-element:hover
+{
+	background-color: rgba(220, 220, 220, 255);
+}
