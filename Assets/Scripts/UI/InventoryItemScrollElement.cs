@@ -8,7 +8,7 @@ public sealed class InventoryItemScrollElement : VisualElement
     private VisualElement _imageElement;
     private Label _nameLabel;
 
-    public string DynamicId
+    public string StaticItemId
     {
         get => name;
         set => name = value;

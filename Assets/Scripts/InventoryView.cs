@@ -580,7 +580,7 @@ public sealed class InventoryView : MonoBehaviour
 
             var staticItem = collection.Items[i];
             element.Setup(staticItem.Sprite, staticItem.Id);
-            element.DynamicId = staticItem.Id;
+            element.StaticItemId = staticItem.Id;
 
             element.RegisterCallback<ClickEvent>(ClickHandlerFoo);
 
@@ -592,7 +592,9 @@ public sealed class InventoryView : MonoBehaviour
     {
         if (evt.currentTarget is InventoryItemScrollElement scrollElement)
         {
-            var staticItem = InventoryManager.Singleton.GetStaticItemById(scrollElement.DynamicId);
+            var staticItem = InventoryManager.Singleton.GetStaticItemById(
+                scrollElement.StaticItemId
+            );
 
             if (staticItem == null)
             {
