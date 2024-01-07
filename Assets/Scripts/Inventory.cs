@@ -390,6 +390,28 @@ public sealed class Inventory
         return Items.Contains(inventoryItem);
     }
 
+    public void Sort()
+    {
+        var list = new List<InventoryItem>(Items);
+        list.Sort(InventoryItemCompaper);
+
+        Clear();
+
+        for (int i = 0; i < list.Count; i++)
+        {
+            var added = AddExistingItem(list[i]);
+
+            if (!added)
+            {
+                Debug.LogWarning(
+                    $"Failed to add item {list[i].Id} during sorting process, this should never happen"
+                );
+            }
+        }
+
+        DispatchCollectionChangedEvent();
+    }
+
     public void GetItemsDeeplyNonAlloc(List<InventoryItem> results)
     {
         var stack = new Stack<BackpackInventoryItem>();
@@ -422,6 +444,18 @@ public sealed class Inventory
         }
     }
 
+    private void Clear()
+    {
+        _cellsMap.Clear();
+
+        for (int i = 0; i < _cells.Length; i++)
+        {
+            _cells[i] = null;
+        }
+
+        Items.Clear();
+    }
+
     private void PopulateIndexes(int x, int y, int width, int height, int[] array)
     {
         var counter = 0;
@@ -441,5 +475,16 @@ public sealed class Inventory
     private void DispatchCollectionChangedEvent()
     {
         OnCollectionChanged?.Invoke(this);
+    }
+
+    private int InventoryItemCompaper(InventoryItem lhs, InventoryItem rhs)
+    {
+        var lhsItem = lhs.Item;
+        var rhsItem = rhs.Item;
+
+        var lhsArea = lhsItem.GridSize.x * lhsItem.GridSize.y;
+        var rhsArea = rhsItem.GridSize.x * rhsItem.GridSize.y;
+
+        return rhsArea - lhsArea;
     }
 }

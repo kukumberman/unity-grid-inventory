@@ -2,6 +2,7 @@
     <InventoryWindowElement style="left: 125px; top: 125px; width: 500px;">
         <ui:VisualElement name="titlebar" style="height: 50px; width: 100%; background-color: rgb(255, 255, 255); flex-direction: row; justify-content: space-between; align-items: center;">
             <ui:Label text="Inventory" name="label-title" style="-unity-text-align: middle-left; height: 100%; font-size: 30px; margin-left: 25px;" />
+            <ui:Button text="SORT" name="btn-sort" style="font-size: 20px;" />
             <ui:Button text="X" name="btn-close" style="background-color: rgb(255, 0, 0); color: rgb(255, 255, 255); width: 25px; height: 25px; margin-right: 10px;" />
         </ui:VisualElement>
         <InventoryGridCollectionElement name="inventory">

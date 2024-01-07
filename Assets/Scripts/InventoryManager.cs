@@ -272,6 +272,23 @@ public sealed class InventoryManager : MonoBehaviour
         return _inventory.AddItem(item, out var _);
     }
 
+    public void Sort(string inventoryId)
+    {
+        if (inventoryId == null)
+        {
+            _inventory.Sort();
+        }
+        else
+        {
+            var dynamicItem = GetDynamicItemById(inventoryId);
+
+            if (dynamicItem != null && dynamicItem is BackpackInventoryItem backpackItem)
+            {
+                backpackItem.Inventory.Sort();
+            }
+        }
+    }
+
     #region Serialize / Deserialize
     private string JsonStringifyInventory()
     {

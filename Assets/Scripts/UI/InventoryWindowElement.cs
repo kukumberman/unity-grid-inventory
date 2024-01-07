@@ -23,6 +23,12 @@ public sealed class InventoryWindowElement : VisualElement
             RemoveFromHierarchy();
         };
 
+        var btnSort = _titlebarElement.Q<Button>("btn-sort");
+        btnSort.clicked += () =>
+        {
+            InventoryManager.Singleton.Sort(GridCollection.DynamicId);
+        };
+
         GridCollection = this.Q<InventoryGridCollectionElement>("inventory");
 
         _titlebarElement.RegisterCallback<PointerDownEvent>(PointerDownHandler);
