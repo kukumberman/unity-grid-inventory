@@ -207,6 +207,15 @@ public sealed class InventoryView : MonoBehaviour
         _screenPosition = Input.mousePosition;
         _screenPosition.y = Screen.height - _screenPosition.y;
 
+        var style = _document.rootVisualElement.resolvedStyle;
+        var screenSize = new Vector2(style.width, style.height);
+
+        var width01 = Mathf.InverseLerp(0, Screen.width, _screenPosition.x);
+        var height01 = Mathf.InverseLerp(0, Screen.height, _screenPosition.y);
+
+        _screenPosition.x = Mathf.Lerp(0, screenSize.x, width01);
+        _screenPosition.y = Mathf.Lerp(0, screenSize.y, height01);
+
         _targetPosition = _screenPosition + _clickRelativeOffset;
     }
 
