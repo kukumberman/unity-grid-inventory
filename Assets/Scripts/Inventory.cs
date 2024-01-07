@@ -92,32 +92,7 @@ public sealed class Inventory
         var width = !rotated ? item.Width : item.Height;
         var height = !rotated ? item.Height : item.Width;
 
-        var maxCount = item.Width * item.Height;
-        var indexes = new List<int>();
-
-        for (var i = 0; i < width; i++)
-        {
-            for (var j = 0; j < height; j++)
-            {
-                var xx = x + i;
-                var yy = y + j;
-
-                if (xx >= _width || yy >= _height)
-                {
-                    continue;
-                }
-
-                var index = _grid.GridToIndex(xx, yy);
-                if (_cells[index] != null)
-                {
-                    continue;
-                }
-
-                indexes.Add(index);
-            }
-        }
-
-        if (indexes.Count != maxCount)
+        if (!IsAreaEmpty(x, y, width, height))
         {
             return false;
         }
@@ -143,17 +118,20 @@ public sealed class Inventory
         newItem.ItemId = item.Id;
         newItem.IsRotated = rotated;
 
+        // todo: avoid allocation ?
+        var indexes = new int[item.Width * item.Height];
+        PopulateIndexes(x, y, width, height, indexes);
+
         Items.Add(newItem);
 
-        DispatchCollectionChangedEvent();
-
-        // todo: avoid allocation
-        _cellsMap.Add(newItem, indexes.ToArray());
+        _cellsMap.Add(newItem, indexes);
 
         foreach (var idx in indexes)
         {
             _cells[idx] = newItem;
         }
+
+        DispatchCollectionChangedEvent();
 
         return true;
     }
@@ -232,50 +210,28 @@ public sealed class Inventory
         var width = !rotated ? item.Width : item.Height;
         var height = !rotated ? item.Height : item.Width;
 
-        var maxCount = item.Width * item.Height;
-        var indexes = new List<int>();
-
-        for (var i = 0; i < width; i++)
-        {
-            for (var j = 0; j < height; j++)
-            {
-                var xx = x + i;
-                var yy = y + j;
-
-                if (xx >= _width || yy >= _height)
-                {
-                    continue;
-                }
-
-                var index = _grid.GridToIndex(xx, yy);
-                if (_cells[index] != null)
-                {
-                    continue;
-                }
-
-                indexes.Add(index);
-            }
-        }
-
-        if (indexes.Count != maxCount)
+        if (!IsAreaEmpty(x, y, width, height))
         {
             return false;
         }
+
+        // todo: avoid allocation ?
+        var indexes = new int[item.Width * item.Height];
+        PopulateIndexes(x, y, width, height, indexes);
 
         inventoryItem.GridPosition = new Vector2Int(x, y);
         inventoryItem.IsRotated = rotated;
 
         Items.Add(inventoryItem);
 
-        DispatchCollectionChangedEvent();
-
-        // todo: avoid allocation
-        _cellsMap.Add(inventoryItem, indexes.ToArray());
+        _cellsMap.Add(inventoryItem, indexes);
 
         foreach (var idx in indexes)
         {
             _cells[idx] = inventoryItem;
         }
+
+        DispatchCollectionChangedEvent();
 
         return true;
     }
@@ -306,6 +262,35 @@ public sealed class Inventory
                 var index = _grid.GridToIndex(xx, yy);
 
                 if (_cells[index] == null || _cells[index] == item)
+                {
+                    freeCount += 1;
+                }
+            }
+        }
+
+        return freeCount == totalCount;
+    }
+
+    public bool IsAreaEmpty(int x, int y, int width, int height)
+    {
+        var totalCount = width * height;
+        var freeCount = 0;
+
+        for (var i = 0; i < width; i++)
+        {
+            for (var j = 0; j < height; j++)
+            {
+                var xx = x + i;
+                var yy = y + j;
+
+                if (!_grid.IsInside(xx, yy))
+                {
+                    continue;
+                }
+
+                var index = _grid.GridToIndex(xx, yy);
+
+                if (_cells[index] == null)
                 {
                     freeCount += 1;
                 }
