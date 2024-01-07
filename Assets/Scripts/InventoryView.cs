@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -112,6 +113,23 @@ public sealed class InventoryView : MonoBehaviour
         btnLoad.clicked += () => InventoryManager.Singleton.Load();
 
         CreateScrollList();
+    }
+
+    public void BindAndSync(Inventory rootInventory)
+    {
+        if (_windowMap.Count > 0)
+        {
+            var windowElements = _windowMap.Values.ToArray();
+            foreach (var element in windowElements)
+            {
+                element.RemoveFromHierarchy();
+            }
+
+            _windowMap.Clear();
+        }
+
+        _inventoryStashElement.Bind(rootInventory);
+        _inventoryStashElement.Sync();
     }
 
     private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)

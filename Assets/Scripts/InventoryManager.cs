@@ -49,7 +49,7 @@ public sealed class InventoryManager : MonoBehaviour
         _inventory = new Inventory(_gridSize);
 
         _view.CreateGrid(_gridSize);
-        _view.Stash.Bind(_inventory);
+        _view.BindAndSync(_inventory);
         // todo: temp solution, it should be null since it is referenced as "destinationInventoryId" and compared to null is this class
         _view.Stash.DynamicId = null;
 
@@ -340,8 +340,7 @@ public sealed class InventoryManager : MonoBehaviour
 
         if (Application.isPlaying)
         {
-            _view.Stash.Bind(_inventory);
-            _view.Stash.Sync();
+            _view.BindAndSync(_inventory);
         }
     }
 
