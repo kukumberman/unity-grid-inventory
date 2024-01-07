@@ -1,11 +1,13 @@
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine;
 using UnityEngine.Events;
 using Newtonsoft.Json;
+using Kukumberman.SaveSystem;
 
 public sealed class InventoryManager : MonoBehaviour
 {
+    private const string kSaveKey = "inventory.json";
+
     public static InventoryManager Singleton { get; private set; }
 
     [SerializeField]
@@ -25,6 +27,8 @@ public sealed class InventoryManager : MonoBehaviour
 
     private Inventory _inventory;
 
+    private ISaveSystem _saveSystem;
+
     public Inventory RootInventory => _inventory;
     public InventoryItemCollectionSO ItemCollection => _itemCollection;
 
@@ -40,6 +44,8 @@ public sealed class InventoryManager : MonoBehaviour
 
     private void Start()
     {
+        _saveSystem = GetSaveSystem();
+
         _inventory = new Inventory(_gridSize);
 
         _view.CreateGrid(_gridSize);
@@ -305,21 +311,18 @@ public sealed class InventoryManager : MonoBehaviour
     [ContextMenu(nameof(Save))]
     public void Save()
     {
-        var path = GetSavePath();
-        var json = JsonStringifyInventory();
-        File.WriteAllText(path, json);
+        _saveSystem.SetString(kSaveKey, JsonStringifyInventory());
     }
 
     [ContextMenu(nameof(Load))]
     public void Load()
     {
-        var path = GetSavePath();
-        if (!File.Exists(path))
+        var json = _saveSystem.GetString(kSaveKey);
+        if (string.IsNullOrEmpty(json))
         {
             return;
         }
 
-        var json = File.ReadAllText(path);
         var uninitializedInventory = JsonConvert.DeserializeObject<Inventory>(json);
 
         _inventory = new Inventory(_gridSize);
@@ -342,9 +345,13 @@ public sealed class InventoryManager : MonoBehaviour
         }
     }
 
-    private static string GetSavePath()
+    private ISaveSystem GetSaveSystem()
     {
-        return Path.Combine(Application.persistentDataPath, "inventory.json");
+#if UNITY_WEBGL && !UNITY_EDITOR
+        return new WebglSaveSystem();
+#else
+        return FileSaveSystem.Persistent;
+#endif
     }
     #endregion
 }
