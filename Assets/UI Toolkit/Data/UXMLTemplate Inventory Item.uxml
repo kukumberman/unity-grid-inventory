@@ -1,7 +1,7 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <InventoryItemElement style="width: 400px; height: 200px;">
         <ui:VisualElement name="ve-background" style="position: absolute; width: 100%; height: 100%; background-color: rgba(0, 0, 128, 0.25);" />
-        <ui:VisualElement name="ve-image" style="background-image: url(&apos;project://database/Assets/Sprites/62.jpg?fileID=2800000&amp;guid=2584b5d04de0ed640933e32fcb484272&amp;type=3#62&apos;); -unity-background-scale-mode: scale-to-fit; width: 400px; height: 200px; rotate: 0; transform-origin: left top;" />
+        <ui:VisualElement name="ve-image" style="background-image: url(&apos;project://database/Assets/Sprites/Innawoods/Weapons/Assault/62.jpg?fileID=2800000&amp;guid=2584b5d04de0ed640933e32fcb484272&amp;type=3#62&apos;); -unity-background-scale-mode: scale-to-fit; width: 400px; height: 200px; rotate: 0; transform-origin: left top;" />
         <ui:Label text="My name" name="label-name" style="position: absolute; right: 0; top: 0; font-size: 30px; -unity-font-style: normal; color: rgb(255, 255, 255); margin-top: 5px; margin-right: 5px; -unity-text-align: middle-right;" />
         <ui:VisualElement name="ve-border" style="position: absolute; width: 100%; height: 100%; border-left-color: rgb(255, 255, 255); border-right-color: rgb(255, 255, 255); border-top-color: rgb(255, 255, 255); border-bottom-color: rgb(255, 255, 255); border-left-width: 2px; border-right-width: 2px; border-top-width: 2px; border-bottom-width: 2px;" />
     </InventoryItemElement>

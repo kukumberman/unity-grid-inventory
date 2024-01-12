@@ -2,7 +2,7 @@
     <Style src="project://database/Assets/UI%20Toolkit/Data/USS%20InventoryItemScrollElement.uss?fileID=7433441132597879392&amp;guid=1389c8fb410fa0e40a72de7facf99b01&amp;type=3#USS InventoryItemScrollElement" />
     <InventoryItemScrollElement class="item-scroll-element">
         <ui:VisualElement style="flex-direction: row; -unity-text-align: middle-left;">
-            <ui:VisualElement name="ve-image" style="height: 100px; width: 100px; background-image: url(&apos;project://database/Assets/Sprites/62.jpg?fileID=2800000&amp;guid=2584b5d04de0ed640933e32fcb484272&amp;type=3#62&apos;); -unity-background-scale-mode: scale-to-fit;" />
+            <ui:VisualElement name="ve-image" style="height: 100px; width: 100px; background-image: url(&apos;project://database/Assets/Sprites/Innawoods/Weapons/Assault/62.jpg?fileID=2800000&amp;guid=2584b5d04de0ed640933e32fcb484272&amp;type=3#62&apos;); -unity-background-scale-mode: scale-to-fit;" />
             <ui:Label text="Label" name="label-name" style="font-size: 30px; margin-left: 25px;" />
         </ui:VisualElement>
     </InventoryItemScrollElement>
