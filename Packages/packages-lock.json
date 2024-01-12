@@ -1,5 +1,14 @@
 {
   "dependencies": {
+    "com.kukumberman.unity-webgl-utils": {
+      "version": "https://github.com/kukumberman/Unity-Webgl-Utils.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.1.0"
+      },
+      "hash": "a3aeb614282db81f5ccfe0e602b916b34e3078f2"
+    },
     "com.unity.editorcoroutines": {
       "version": "1.0.0",
       "depth": 1,
