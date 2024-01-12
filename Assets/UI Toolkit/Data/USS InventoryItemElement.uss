@@ -1,0 +1,28 @@
+.inventory-item #ve-background
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 128, 0.25);
+}
+
+.inventory-item #label-name
+{
+	position: absolute;
+	right: 0;
+	top: 0;
+	font-size: 20px;
+	color: rgb(255, 255, 255);
+	margin-top: 5px;
+	margin-right: 5px;
+	-unity-text-align: middle-right;
+}
+
+.inventory-item #ve-border
+{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	border-color: rgb(255, 255, 255);
+	border-width: 2px;
+}

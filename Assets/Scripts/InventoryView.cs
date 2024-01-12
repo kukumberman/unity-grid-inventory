@@ -135,6 +135,10 @@ public sealed class InventoryView : MonoBehaviour
     private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
     {
         var element = _itemUxmlPrefab.Instantiate()[0] as InventoryItemElement;
+        foreach (var styleSheet in _itemUxmlPrefab.stylesheets)
+        {
+            element.styleSheets.Add(styleSheet);
+        }
 
         element.style.position = new StyleEnum<Position>(Position.Absolute);
 
