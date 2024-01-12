@@ -17,4 +17,9 @@ public class InventoryItemSO : ScriptableObject
     public int Height => _gridSize.y;
     public Sprite Sprite => _sprite;
     public Vector2Int GridSize => _gridSize;
+
+    public void SetSprite(Sprite sprite)
+    {
+        _sprite = sprite;
+    }
 }
