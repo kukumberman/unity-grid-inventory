@@ -28,6 +28,8 @@ public sealed class InventoryView : MonoBehaviour
 
     private InventoryGridCollectionElement _inventoryStashElement;
 
+    private ScrollView _itemScrollView;
+
     private InventoryItemElement _draggableElement;
     private Vector2 _cachedPosition;
     private Vector2 _clickRelativeOffset;
@@ -617,6 +619,13 @@ public sealed class InventoryView : MonoBehaviour
 
             scrollView.contentContainer.Add(element);
         }
+
+        var textField = scrollView.parent.Q<TextField>();
+        textField.value = string.Empty;
+
+        textField.RegisterValueChangedCallback(TextFieldValueChangedHandler);
+
+        _itemScrollView = scrollView;
     }
 
     private void ClickHandlerFoo(ClickEvent evt)
@@ -634,5 +643,24 @@ public sealed class InventoryView : MonoBehaviour
 
             InventoryManager.Singleton.AddItem(staticItem);
         }
+    }
+
+    private void TextFieldValueChangedHandler(ChangeEvent<string> evt)
+    {
+        var element = evt.currentTarget as TextField;
+        var text = element.value;
+
+        var query = _itemScrollView.contentContainer.Query<InventoryItemScrollElement>();
+
+        query.ForEach(
+            (scrollItem) =>
+            {
+                var contains =
+                    scrollItem.StaticItemId.IndexOf(text, System.StringComparison.OrdinalIgnoreCase)
+                    != -1;
+
+                scrollItem.style.display = contains ? DisplayStyle.Flex : DisplayStyle.None;
+            }
+        );
     }
 }
