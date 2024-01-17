@@ -250,9 +250,20 @@ public sealed class InventoryView : MonoBehaviour
         InventoryGridCollectionElement inventoryGridElement = null;
         PopulateGridCollectionsElements();
 
+        // todo: inappropriate behaviour when true so it is better to keep value of false
+        bool checkCorners = false;
+
+        var elementSize = new Vector2(element.resolvedStyle.width, element.resolvedStyle.height);
+
         foreach (var gridElement in _listOfGridCollectionElements)
         {
-            if (gridElement.InsideRect(_screenPosition))
+            var anyCornerInside =
+                gridElement.InsideRect(_targetPosition)
+                || gridElement.InsideRect(_targetPosition + new Vector2(elementSize.x, 0))
+                || gridElement.InsideRect(_targetPosition + new Vector2(0, elementSize.y))
+                || gridElement.InsideRect(_targetPosition + elementSize);
+
+            if (gridElement.InsideRect(_screenPosition) || (checkCorners && anyCornerInside))
             {
                 inventoryGridElement = gridElement;
                 break;
