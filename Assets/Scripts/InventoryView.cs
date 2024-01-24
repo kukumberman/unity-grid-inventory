@@ -560,6 +560,8 @@ public sealed class InventoryView : MonoBehaviour
 
         if (targetDynamicItem is not BackpackInventoryItem backpackItem)
         {
+            ResetDraggedElement();
+            ResetColorOfAllAvailableCells();
             return;
         }
 
