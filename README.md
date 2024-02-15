@@ -5,6 +5,7 @@
 ## Table of contents
 - [Description](#description)
 - [Usage](#usage)
+- [Known issues](#known-issues)
 - [License](#license)
 
 ## Description
@@ -36,6 +37,9 @@ Awesome sprites from https://innawoods.net/ (however there are no **Terms of Ser
 - Navigate to **SampleScene** and enter playmode.
 - Create custom item by using context menu **Assets/Create/SO/\***, setup fields and drag into active collection.
 - If you want to build project in WebGL don't forget to remove scene **Scene Webgl Start** in **EditorBuildSettings** otherwise you would not be able to play game (I made it for [security](https://github.com/kukumberman/Unity-Webgl-Utils) reasons)
+
+## Known issues
+- For the sake of simplicity there are NO **namespaces**, nor **assembly definition** files and **Scripts** directory folder is not organized as well
 
 ## License
 
