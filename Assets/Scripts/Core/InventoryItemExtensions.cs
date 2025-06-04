@@ -11,4 +11,16 @@ public static class InventoryItemExtensions
     {
         return new Vector2Int(item.BackpackWidth, item.BackpackHeight);
     }
+
+    public static Sprite GetSprite(this IDynamicInventoryItem item)
+    {
+        var staticItem = item.Item as InventoryItemSO;
+
+        if (staticItem == null)
+        {
+            return null;
+        }
+
+        return staticItem.Sprite;
+    }
 }

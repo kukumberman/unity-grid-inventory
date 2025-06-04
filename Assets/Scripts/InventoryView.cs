@@ -150,7 +150,7 @@ public sealed class InventoryView : MonoBehaviour
         element.SetScreenPosition(gridPosition * _cellSize);
 
         element.Setup(_cellSize, inventoryItem.Item.GetGridSize());
-        element.SetSprite(inventoryItem.Item.Sprite);
+        element.SetSprite(inventoryItem.GetSprite());
         element.SetTitle(inventoryItem.Item.Id);
         element.IsRotated = inventoryItem.IsRotated;
 
