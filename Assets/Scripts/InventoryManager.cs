@@ -1,18 +1,10 @@
 using System.Collections.Generic;
 using Kukumberman.SaveSystem;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 
 public sealed class InventoryManager : MonoBehaviour
 {
-    private static readonly JsonConverter[] kJsonConverters = new JsonConverter[]
-    {
-        new JsonConverterVector2Int(),
-        new JsonConverterInventoryItem(),
-        new JsonConverterTetrisInventory(),
-    };
-
     private const string kSaveKey = "inventory.json";
 
     public static InventoryManager Singleton { get; private set; }
@@ -35,6 +27,7 @@ public sealed class InventoryManager : MonoBehaviour
     private TetrisInventory _inventory;
 
     private ISaveSystem _saveSystem;
+    private ISerialization _serialization;
 
     public TetrisInventory RootInventory => _inventory;
     public InventoryItemCollectionSO ItemCollection => _itemCollection;
@@ -52,6 +45,7 @@ public sealed class InventoryManager : MonoBehaviour
     private void Start()
     {
         _saveSystem = GetSaveSystem();
+        _serialization = GetSerialization();
 
         _inventory = new TetrisInventory(_gridSize);
 
@@ -303,23 +297,12 @@ public sealed class InventoryManager : MonoBehaviour
     }
 
     #region Serialize / Deserialize
-    private string JsonStringifyInventory()
-    {
-        return JsonConvert.SerializeObject(
-            _inventory,
-            new JsonSerializerSettings()
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                Formatting = Formatting.Indented,
-                Converters = kJsonConverters,
-            }
-        );
-    }
 
     [ContextMenu(nameof(Save))]
     public void Save()
     {
-        _saveSystem.SetString(kSaveKey, JsonStringifyInventory());
+        var bytes = _serialization.Serialize(_inventory);
+        _saveSystem.SetBytes(kSaveKey, bytes);
     }
 
     [ContextMenu(nameof(Load))]
@@ -337,22 +320,32 @@ public sealed class InventoryManager : MonoBehaviour
 
     private void LoadInternal()
     {
-        var json = _saveSystem.GetString(kSaveKey);
-        if (string.IsNullOrEmpty(json))
+        var bytes = _saveSystem.GetBytes(kSaveKey);
+        if (bytes == null)
         {
             return;
         }
 
-        var uninitializedInventory = JsonConvert.DeserializeObject<TetrisInventory>(
-            json,
-            kJsonConverters
-        );
+        var uninitializedInventory = _serialization.Deserialize(bytes);
+
+        if (uninitializedInventory == null)
+        {
+            uninitializedInventory = new TetrisInventory();
+        }
 
         _inventory = new TetrisInventory(_gridSize);
 
         for (int i = 0; i < uninitializedInventory.Items.Count; i++)
         {
             var item = uninitializedInventory.Items[i];
+
+            if (item == null)
+            {
+                continue;
+            }
+
+            // Dima: for binary use "_inventory.AddCopyItemAt"
+
             _inventory.AddExistingItemAt(
                 item,
                 item.GridPosition.x,
@@ -374,6 +367,11 @@ public sealed class InventoryManager : MonoBehaviour
 #else
         return FileSaveSystem.Persistent;
 #endif
+    }
+
+    private ISerialization GetSerialization()
+    {
+        return new NewtonsoftJsonSerialization(this);
     }
     #endregion
 }

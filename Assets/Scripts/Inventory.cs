@@ -229,6 +229,44 @@ public abstract class Inventory<T> : IInventory
         return true;
     }
 
+    public bool AddCopyItemAt(T inventoryItem, int x, int y, bool rotated)
+    {
+        T item = null;
+
+        if (
+            inventoryItem is IDynamicBackpackInventoryItem dynamicBackpackItem
+            && inventoryItem.Item is IStaticBackpackInventoryItem staticBackpackItem
+        )
+        {
+            item = CreateBackpackItemFunc(staticBackpackItem.GetBackpackInventorySize());
+
+            var backpackItem = item as IDynamicBackpackInventoryItem;
+
+            var inventory = backpackItem.Inventory as Inventory<T>;
+
+            foreach (var childItem in dynamicBackpackItem.Inventory.Items)
+            {
+                inventory.AddCopyItemAt(
+                    childItem as T,
+                    childItem.GridPosition.x,
+                    childItem.GridPosition.y,
+                    childItem.IsRotated
+                );
+            }
+        }
+        else
+        {
+            item = CreateItemFunc();
+        }
+
+        item.Id = inventoryItem.Id;
+        item.ItemId = inventoryItem.ItemId;
+        item.GridPosition = inventoryItem.GridPosition;
+        item.IsRotated = inventoryItem.IsRotated;
+
+        return AddExistingItemAt(item, x, y, rotated);
+    }
+
     public bool IsAreaEmptyOrOccupiedByItem(
         int x,
         int y,

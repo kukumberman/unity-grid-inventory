@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace Kukumberman.SaveSystem
@@ -7,6 +8,20 @@ namespace Kukumberman.SaveSystem
         public string GetString(string key)
         {
             return PlayerPrefs.GetString(key);
+        }
+
+        public byte[] GetBytes(string key)
+        {
+            var base64 = GetString(key);
+
+            return Convert.FromBase64String(base64);
+        }
+
+        public void SetBytes(string key, byte[] value)
+        {
+            var base64 = Convert.ToBase64String(value);
+
+            SetString(key, base64);
         }
 
         public bool Remove(string key)

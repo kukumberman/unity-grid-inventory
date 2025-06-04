@@ -1,3 +1,4 @@
+using System;
 #if UNITY_WEBGL
 using System.Runtime.InteropServices;
 #endif
@@ -31,6 +32,20 @@ namespace Kukumberman.SaveSystem
 #if UNITY_WEBGL
             LocalStorageSetItem(key, value);
 #endif
+        }
+
+        public byte[] GetBytes(string key)
+        {
+            var base64 = GetString(key);
+
+            return Convert.FromBase64String(base64);
+        }
+
+        public void SetBytes(string key, byte[] value)
+        {
+            var base64 = Convert.ToBase64String(value);
+
+            SetString(key, base64);
         }
 
         public bool Remove(string key)

@@ -28,6 +28,24 @@ namespace Kukumberman.SaveSystem
             return null;
         }
 
+        public byte[] GetBytes(string key)
+        {
+            var path = GetSavePath(key);
+
+            if (File.Exists(path))
+            {
+                return File.ReadAllBytes(path);
+            }
+
+            return null;
+        }
+
+        public void SetBytes(string key, byte[] value)
+        {
+            var path = GetSavePath(key);
+            File.WriteAllBytes(path, value);
+        }
+
         public bool Remove(string key)
         {
             var path = GetSavePath(key);

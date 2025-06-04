@@ -6,6 +6,10 @@ namespace Kukumberman.SaveSystem
 
         void SetString(string key, string value);
 
+        byte[] GetBytes(string key);
+
+        void SetBytes(string key, byte[] value);
+
         bool Remove(string key);
     }
 }

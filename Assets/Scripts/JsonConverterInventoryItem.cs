@@ -5,7 +5,12 @@ using UnityEngine;
 
 public sealed class JsonConverterInventoryItem : JsonConverter<IDynamicInventoryItem>
 {
-    private InventoryManager _inventoryManager;
+    private readonly InventoryManager _inventoryManager;
+
+    public JsonConverterInventoryItem(InventoryManager manager)
+    {
+        _inventoryManager = manager;
+    }
 
     public override bool CanWrite => false;
 
@@ -20,11 +25,6 @@ public sealed class JsonConverterInventoryItem : JsonConverter<IDynamicInventory
         if (reader.TokenType == JsonToken.Null)
         {
             return null;
-        }
-
-        if (_inventoryManager == null)
-        {
-            _inventoryManager = UnityEngine.Object.FindObjectOfType<InventoryManager>();
         }
 
         var obj = JObject.Load(reader);
