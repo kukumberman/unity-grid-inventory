@@ -2,17 +2,23 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class Inventory
+public abstract class Inventory<T> : IInventory
+    where T : class, IDynamicInventoryItem
 {
-    public event Action<Inventory> OnCollectionChanged;
+    public event Action<Inventory<T>> OnCollectionChanged;
 
-    public List<InventoryItem> Items = new();
-    private readonly InventoryItem[] _cells;
-    private readonly Dictionary<InventoryItem, int[]> _cellsMap;
+    public readonly List<T> Items = new();
+    private readonly T[] _cells;
+    private readonly Dictionary<T, int[]> _cellsMap;
     private readonly Grid2D _grid;
 
     private readonly int _width;
     private readonly int _height;
+
+    IReadOnlyList<IDynamicInventoryItem> IInventory.Items => Items;
+
+    public Func<T> CreateItemFunc;
+    public Func<Vector2Int, T> CreateBackpackItemFunc;
 
     /// <summary>
     /// This constructor is used by Newtonsoft.Json to create empty instance, please avoid of using this constructor.
@@ -23,15 +29,15 @@ public sealed class Inventory
     {
         _width = width;
         _height = height;
-        _cells = new InventoryItem[_width * _height];
-        _cellsMap = new Dictionary<InventoryItem, int[]>();
+        _cells = new T[_width * _height];
+        _cellsMap = new Dictionary<T, int[]>();
         _grid = new Grid2D(_width, _height);
     }
 
     public Inventory(Vector2Int size)
         : this(size.x, size.y) { }
 
-    public bool AddItem(InventoryItemSO item, out InventoryItem newItem)
+    public bool AddItem(IStaticInventoryItem item, out T newItem)
     {
         newItem = null;
 
@@ -79,13 +85,7 @@ public sealed class Inventory
         return false;
     }
 
-    public bool AddItemAt(
-        InventoryItemSO item,
-        int x,
-        int y,
-        bool rotated,
-        out InventoryItem newItem
-    )
+    public bool AddItemAt(IStaticInventoryItem item, int x, int y, bool rotated, out T newItem)
     {
         newItem = null;
 
@@ -97,20 +97,13 @@ public sealed class Inventory
             return false;
         }
 
-        if (item is BackpackInventoryItemSO backpackStaticItem)
+        if (item is IStaticBackpackInventoryItem backpackStaticItem)
         {
-            var backpackItem = new BackpackInventoryItem
-            {
-                Inventory = new Inventory(
-                    backpackStaticItem.BackpackWidth,
-                    backpackStaticItem.BackpackHeight
-                )
-            };
-            newItem = backpackItem;
+            newItem = CreateBackpackItemFunc(backpackStaticItem.GetBackpackInventorySize());
         }
         else
         {
-            newItem = new InventoryItem();
+            newItem = CreateItemFunc();
         }
 
         newItem.Id = Guid.NewGuid().ToString();
@@ -136,7 +129,7 @@ public sealed class Inventory
         return true;
     }
 
-    public bool AddExistingItem(InventoryItem inventoryItem)
+    public bool AddExistingItem(T inventoryItem)
     {
         if (inventoryItem == null)
         {
@@ -194,7 +187,7 @@ public sealed class Inventory
         return false;
     }
 
-    public bool AddExistingItemAt(InventoryItem inventoryItem, int x, int y, bool rotated)
+    public bool AddExistingItemAt(T inventoryItem, int x, int y, bool rotated)
     {
         if (inventoryItem == null)
         {
@@ -241,7 +234,7 @@ public sealed class Inventory
         int y,
         int width,
         int height,
-        InventoryItem item = null
+        IDynamicInventoryItem item = null
     )
     {
         var totalCount = width * height;
@@ -300,7 +293,7 @@ public sealed class Inventory
         return freeCount == totalCount;
     }
 
-    public bool RemoveItemById(string id, out InventoryItem inventoryItem)
+    public bool RemoveItemById(string id, out T inventoryItem)
     {
         inventoryItem = null;
 
@@ -353,8 +346,9 @@ public sealed class Inventory
             _cells[idx] = null;
         }
 
-        inventoryItem.GridPosition.x = x;
-        inventoryItem.GridPosition.y = y;
+        var gridPosition = new Vector2Int(x, y);
+
+        inventoryItem.GridPosition = gridPosition;
 
         PopulateIndexes(x, y, width, height, indexes);
 
@@ -370,14 +364,14 @@ public sealed class Inventory
         return true;
     }
 
-    public bool Contains(InventoryItem inventoryItem)
+    public bool Contains(T inventoryItem)
     {
         return Items.Contains(inventoryItem);
     }
 
     public void Sort()
     {
-        var list = new List<InventoryItem>(Items);
+        var list = new List<T>(Items);
         list.Sort(InventoryItemCompaper);
 
         Clear();
@@ -397,15 +391,15 @@ public sealed class Inventory
         DispatchCollectionChangedEvent();
     }
 
-    public void GetItemsDeeplyNonAlloc(List<InventoryItem> results)
+    public void GetItemsDeeplyNonAlloc(List<IDynamicInventoryItem> results)
     {
-        var stack = new Stack<BackpackInventoryItem>();
+        var stack = new Stack<IDynamicBackpackInventoryItem>();
 
         for (int i = 0; i < Items.Count; i++)
         {
             results.Add(Items[i]);
 
-            if (Items[i] is BackpackInventoryItem backpackItem)
+            if (Items[i] is IDynamicBackpackInventoryItem backpackItem)
             {
                 stack.Push(backpackItem);
             }
@@ -421,7 +415,7 @@ public sealed class Inventory
 
                 results.Add(innerItem);
 
-                if (innerItem is BackpackInventoryItem innerBackpackItem)
+                if (innerItem is IDynamicBackpackInventoryItem innerBackpackItem)
                 {
                     stack.Push(innerBackpackItem);
                 }
@@ -462,13 +456,16 @@ public sealed class Inventory
         OnCollectionChanged?.Invoke(this);
     }
 
-    private int InventoryItemCompaper(InventoryItem lhs, InventoryItem rhs)
+    private static int InventoryItemCompaper(IDynamicInventoryItem lhs, IDynamicInventoryItem rhs)
     {
         var lhsItem = lhs.Item;
         var rhsItem = rhs.Item;
 
-        var lhsArea = lhsItem.GridSize.x * lhsItem.GridSize.y;
-        var rhsArea = rhsItem.GridSize.x * rhsItem.GridSize.y;
+        var lhsGridSize = lhsItem.GetGridSize();
+        var rhsGridSize = rhsItem.GetGridSize();
+
+        var lhsArea = lhsGridSize.x * lhsGridSize.y;
+        var rhsArea = rhsGridSize.x * rhsGridSize.y;
 
         return rhsArea - lhsArea;
     }

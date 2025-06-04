@@ -16,8 +16,8 @@ public sealed class InventoryGridCollectionElement : VisualElement
     private Grid2D _grid;
     private List<VisualElement> _cells;
 
-    private Func<InventoryItem, InventoryItemElement> _itemFactory;
-    private Inventory _inventory;
+    private Func<IDynamicInventoryItem, InventoryItemElement> _itemFactory;
+    private TetrisInventory _inventory;
     private List<InventoryItemElement> _listOfItemElements = new();
 
     public string DynamicId
@@ -47,7 +47,7 @@ public sealed class InventoryGridCollectionElement : VisualElement
     public void CreateGrid(
         Vector2Int gridSize,
         Func<VisualElement> cellFactory,
-        Func<InventoryItem, InventoryItemElement> itemFactory
+        Func<IDynamicInventoryItem, InventoryItemElement> itemFactory
     )
     {
         _itemFactory = itemFactory;
@@ -170,28 +170,28 @@ public sealed class InventoryGridCollectionElement : VisualElement
         return this.LocalToWorld(contentRect).Contains(position);
     }
 
-    public void Bind(Inventory inventory)
+    public void Bind(TetrisInventory inventory)
     {
         Unbind();
 
         _inventory = inventory;
-        _inventory.OnCollectionChanged += Inventory_OnCollectionChanged;
+        _inventory.OnInventoryChanged += Inventory_OnInventoryChanged;
     }
 
     public void Unbind()
     {
         if (_inventory != null)
         {
-            _inventory.OnCollectionChanged -= Inventory_OnCollectionChanged;
+            _inventory.OnInventoryChanged -= Inventory_OnInventoryChanged;
         }
     }
 
     public void Sync()
     {
-        Inventory_OnCollectionChanged(_inventory);
+        Inventory_OnInventoryChanged(_inventory);
     }
 
-    private void Inventory_OnCollectionChanged(Inventory inventory)
+    private void Inventory_OnInventoryChanged(TetrisInventory inventory)
     {
         // todo: better way to update visual state
 

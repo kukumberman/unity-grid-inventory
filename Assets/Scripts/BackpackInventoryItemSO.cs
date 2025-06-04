@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New BackpackInventoryItemSO", menuName = "SO/BackpackInventoryItemSO")]
-public sealed class BackpackInventoryItemSO : InventoryItemSO
+public sealed class BackpackInventoryItemSO : InventoryItemSO, IStaticBackpackInventoryItem
 {
     [Header("Backpack")]
     [SerializeField]

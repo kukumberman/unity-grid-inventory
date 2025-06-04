@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [CreateAssetMenu(fileName = "New InventoryItemSO", menuName = "SO/InventoryItemSO")]
-public class InventoryItemSO : ScriptableObject
+public class InventoryItemSO : ScriptableObject, IStaticInventoryItem
 {
     [SerializeField]
     private string _id;
@@ -16,7 +16,6 @@ public class InventoryItemSO : ScriptableObject
     public int Width => _gridSize.x;
     public int Height => _gridSize.y;
     public Sprite Sprite => _sprite;
-    public Vector2Int GridSize => _gridSize;
 
     public void SetSprite(Sprite sprite)
     {

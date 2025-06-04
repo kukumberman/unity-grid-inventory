@@ -66,11 +66,11 @@ public sealed class InventoryView : MonoBehaviour
         }
     }
 
-    public void OnItemRemovedEventHandler(InventoryItem inventoryItem)
+    public void OnItemRemovedEventHandler(IDynamicInventoryItem inventoryItem)
     {
         if (inventoryItem is BackpackInventoryItem backpackItem)
         {
-            var list = new List<InventoryItem>();
+            var list = new List<IDynamicInventoryItem>();
             backpackItem.Inventory.GetItemsDeeplyNonAlloc(list);
 
             for (int i = 0; i < list.Count; i++)
@@ -117,7 +117,7 @@ public sealed class InventoryView : MonoBehaviour
         CreateScrollList();
     }
 
-    public void BindAndSync(Inventory rootInventory)
+    public void BindAndSync(TetrisInventory rootInventory)
     {
         if (_windowMap.Count > 0)
         {
@@ -134,7 +134,10 @@ public sealed class InventoryView : MonoBehaviour
         _inventoryStashElement.Sync();
     }
 
-    private InventoryItemElement CreateItemAt(Vector2Int gridPosition, InventoryItem inventoryItem)
+    private InventoryItemElement CreateItemAt(
+        Vector2Int gridPosition,
+        IDynamicInventoryItem inventoryItem
+    )
     {
         var element = _itemUxmlPrefab.Instantiate()[0] as InventoryItemElement;
         foreach (var styleSheet in _itemUxmlPrefab.stylesheets)
@@ -146,7 +149,7 @@ public sealed class InventoryView : MonoBehaviour
 
         element.SetScreenPosition(gridPosition * _cellSize);
 
-        element.Setup(_cellSize, inventoryItem.Item.GridSize);
+        element.Setup(_cellSize, inventoryItem.Item.GetGridSize());
         element.SetSprite(inventoryItem.Item.Sprite);
         element.SetTitle(inventoryItem.Item.Id);
         element.IsRotated = inventoryItem.IsRotated;
@@ -162,7 +165,7 @@ public sealed class InventoryView : MonoBehaviour
         return element;
     }
 
-    private InventoryItemElement CreateItem(InventoryItem inventoryItem)
+    private InventoryItemElement CreateItem(IDynamicInventoryItem inventoryItem)
     {
         return CreateItemAt(inventoryItem.GridPosition, inventoryItem);
     }
@@ -207,8 +210,8 @@ public sealed class InventoryView : MonoBehaviour
 
     public void MarkCellsArea(string inventoryId, int x, int y, int width, int height, bool allowed)
     {
-        var gridElement = _listOfGridCollectionElements.Find(
-            element => element.DynamicId == inventoryId
+        var gridElement = _listOfGridCollectionElements.Find(element =>
+            element.DynamicId == inventoryId
         );
         gridElement.ResetCellsColor();
         gridElement.MarkCellsArea(x, y, width, height, allowed);
@@ -280,7 +283,7 @@ public sealed class InventoryView : MonoBehaviour
 
         var rotated = _draggableElement.IsRotated;
 
-        Inventory inventory;
+        TetrisInventory inventory;
         if (inventoryGridElement.DynamicId != null)
         {
             var dynamicItemDropTarget = InventoryManager.Singleton.GetDynamicItemById(

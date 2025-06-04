@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
+using UnityEngine;
 
-[JsonConverter(typeof(JsonConverterInventoryItem))]
-public class InventoryItem
+public class InventoryItem : IDynamicInventoryItem
 {
     public string Id;
     public string ItemId;
@@ -29,4 +28,30 @@ public class InventoryItem
             return _item;
         }
     }
+
+    string IDynamicInventoryItem.Id
+    {
+        get => Id;
+        set => Id = value;
+    }
+
+    string IDynamicInventoryItem.ItemId
+    {
+        get => ItemId;
+        set => ItemId = value;
+    }
+
+    Vector2Int IDynamicInventoryItem.GridPosition
+    {
+        get => GridPosition;
+        set => GridPosition = value;
+    }
+
+    bool IDynamicInventoryItem.IsRotated
+    {
+        get => IsRotated;
+        set => IsRotated = value;
+    }
+
+    IStaticInventoryItem IDynamicInventoryItem.Item => Item;
 }

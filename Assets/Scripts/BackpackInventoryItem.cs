@@ -1,4 +1,6 @@
-﻿public sealed class BackpackInventoryItem : InventoryItem
+﻿public sealed class BackpackInventoryItem : InventoryItem, IDynamicBackpackInventoryItem
 {
-    public Inventory Inventory;
+    public TetrisInventory Inventory;
+
+    IInventory IDynamicBackpackInventoryItem.Inventory => Inventory;
 }

@@ -1,17 +1,24 @@
 using System.Collections.Generic;
+using Kukumberman.SaveSystem;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
-using Newtonsoft.Json;
-using Kukumberman.SaveSystem;
 
 public sealed class InventoryManager : MonoBehaviour
 {
+    private static readonly JsonConverter[] kJsonConverters = new JsonConverter[]
+    {
+        new JsonConverterVector2Int(),
+        new JsonConverterInventoryItem(),
+        new JsonConverterTetrisInventory(),
+    };
+
     private const string kSaveKey = "inventory.json";
 
     public static InventoryManager Singleton { get; private set; }
 
     [SerializeField]
-    private UnityEvent<InventoryItem> _onItemRemoved;
+    private UnityEvent<IDynamicInventoryItem> _onItemRemoved;
 
     [SerializeField]
     private InventoryView _view;
@@ -25,11 +32,11 @@ public sealed class InventoryManager : MonoBehaviour
     [SerializeField]
     private bool _loadOnStart;
 
-    private Inventory _inventory;
+    private TetrisInventory _inventory;
 
     private ISaveSystem _saveSystem;
 
-    public Inventory RootInventory => _inventory;
+    public TetrisInventory RootInventory => _inventory;
     public InventoryItemCollectionSO ItemCollection => _itemCollection;
 
     private void Awake()
@@ -46,7 +53,7 @@ public sealed class InventoryManager : MonoBehaviour
     {
         _saveSystem = GetSaveSystem();
 
-        _inventory = new Inventory(_gridSize);
+        _inventory = new TetrisInventory(_gridSize);
 
         _view.CreateGrid(_gridSize);
         _view.BindAndSync(_inventory);
@@ -72,12 +79,12 @@ public sealed class InventoryManager : MonoBehaviour
         return _itemCollection.Items.Find(item => item.Id == id);
     }
 
-    public InventoryItem GetDynamicItemById(string id)
+    public IDynamicInventoryItem GetDynamicItemById(string id)
     {
         return GetDynamicItemById(id, out var _);
     }
 
-    public InventoryItem GetDynamicItemById(string id, out Inventory parentInventory)
+    public InventoryItem GetDynamicItemById(string id, out TetrisInventory parentInventory)
     {
         // todo: search inner inventories (Breadth-first search) (needs testing)
         parentInventory = null;
@@ -157,7 +164,7 @@ public sealed class InventoryManager : MonoBehaviour
             return false;
         }
 
-        Inventory destinationInventory;
+        TetrisInventory destinationInventory;
 
         if (destinationInventoryId != null)
         {
@@ -213,7 +220,7 @@ public sealed class InventoryManager : MonoBehaviour
             return false;
         }
 
-        Inventory destinationInventory;
+        TetrisInventory destinationInventory;
 
         if (destinationInventoryId != null)
         {
@@ -304,6 +311,7 @@ public sealed class InventoryManager : MonoBehaviour
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
                 Formatting = Formatting.Indented,
+                Converters = kJsonConverters,
             }
         );
     }
@@ -317,15 +325,30 @@ public sealed class InventoryManager : MonoBehaviour
     [ContextMenu(nameof(Load))]
     public void Load()
     {
+        try
+        {
+            LoadInternal();
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogException(ex);
+        }
+    }
+
+    private void LoadInternal()
+    {
         var json = _saveSystem.GetString(kSaveKey);
         if (string.IsNullOrEmpty(json))
         {
             return;
         }
 
-        var uninitializedInventory = JsonConvert.DeserializeObject<Inventory>(json);
+        var uninitializedInventory = JsonConvert.DeserializeObject<TetrisInventory>(
+            json,
+            kJsonConverters
+        );
 
-        _inventory = new Inventory(_gridSize);
+        _inventory = new TetrisInventory(_gridSize);
 
         for (int i = 0; i < uninitializedInventory.Items.Count; i++)
         {

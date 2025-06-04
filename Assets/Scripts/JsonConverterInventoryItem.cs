@@ -3,16 +3,16 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
-public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
+public sealed class JsonConverterInventoryItem : JsonConverter<IDynamicInventoryItem>
 {
     private InventoryManager _inventoryManager;
 
     public override bool CanWrite => false;
 
-    public override InventoryItem ReadJson(
+    public override IDynamicInventoryItem ReadJson(
         JsonReader reader,
         Type objectType,
-        InventoryItem existingValue,
+        IDynamicInventoryItem existingValue,
         bool hasExistingValue,
         JsonSerializer serializer
     )
@@ -34,7 +34,7 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
 
     public override void WriteJson(
         JsonWriter writer,
-        InventoryItem value,
+        IDynamicInventoryItem value,
         JsonSerializer serializer
     )
     {
@@ -57,7 +57,7 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
         if (staticItem is BackpackInventoryItemSO backpackItem)
         {
             var backpackInventoryItem = new BackpackInventoryItem();
-            backpackInventoryItem.Inventory = new Inventory(
+            backpackInventoryItem.Inventory = new TetrisInventory(
                 backpackItem.BackpackGridSize.x,
                 backpackItem.BackpackGridSize.y
             );
@@ -65,7 +65,7 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
             var jObjectInventory = jObject[nameof(BackpackInventoryItem.Inventory)];
 
             foreach (
-                var innerObject in jObjectInventory[nameof(Inventory.Items)].ToObject<JObject[]>()
+                var innerObject in jObjectInventory[nameof(IInventory.Items)].ToObject<JObject[]>()
             )
             {
                 var innerInventoryItem = Deserialize(innerObject);
@@ -91,9 +91,8 @@ public sealed class JsonConverterInventoryItem : JsonConverter<InventoryItem>
 
         inventoryItem.Id = jObject[nameof(InventoryItem.Id)].ToObject<string>();
         inventoryItem.ItemId = staticItemId;
-        inventoryItem.GridPosition = jObject[
-            nameof(InventoryItem.GridPosition)
-        ].ToObject<Vector2Int>();
+        inventoryItem.GridPosition = jObject[nameof(InventoryItem.GridPosition)]
+            .ToObject<Vector2Int>();
         inventoryItem.IsRotated = jObject[nameof(InventoryItem.IsRotated)].ToObject<bool>();
 
         return inventoryItem;
