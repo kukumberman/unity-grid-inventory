@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Kukumberman.SaveSystem;
 using UnityEngine;
 using UnityEngine.Events;
@@ -70,7 +71,7 @@ public sealed class InventoryManager : MonoBehaviour
 
     public InventoryItemSO GetStaticItemById(string id)
     {
-        return _itemCollection.Items.Find(item => item.Id == id);
+        return _itemCollection.Items.FirstOrDefault(item => item.Id == id);
     }
 
     public IDynamicInventoryItem GetDynamicItemById(string id)
@@ -78,7 +79,7 @@ public sealed class InventoryManager : MonoBehaviour
         return GetDynamicItemById(id, out var _);
     }
 
-    public InventoryItem GetDynamicItemById(string id, out TetrisInventory parentInventory)
+    public IDynamicInventoryItem GetDynamicItemById(string id, out TetrisInventory parentInventory)
     {
         // todo: search inner inventories (Breadth-first search) (needs testing)
         parentInventory = null;
@@ -91,11 +92,11 @@ public sealed class InventoryManager : MonoBehaviour
             return itemInStash;
         }
 
-        var queue = new Queue<BackpackInventoryItem>();
+        var queue = new Queue<IDynamicBackpackInventoryItem>();
 
         for (int i = 0; i < _inventory.Items.Count; i++)
         {
-            if (_inventory.Items[i] is BackpackInventoryItem backpackItem)
+            if (_inventory.Items[i] is IDynamicBackpackInventoryItem backpackItem)
             {
                 queue.Enqueue(backpackItem);
             }
@@ -111,11 +112,11 @@ public sealed class InventoryManager : MonoBehaviour
 
                 if (innerItem.Id == id)
                 {
-                    parentInventory = backpackItem.Inventory;
+                    parentInventory = backpackItem.Inventory as TetrisInventory;
                     return innerItem;
                 }
 
-                if (innerItem is BackpackInventoryItem innerBackpackItem)
+                if (innerItem is IDynamicBackpackInventoryItem innerBackpackItem)
                 {
                     queue.Enqueue(innerBackpackItem);
                 }
@@ -151,7 +152,8 @@ public sealed class InventoryManager : MonoBehaviour
 
     public bool TransferItemToInventory(string dynamicItemId, string destinationInventoryId)
     {
-        var inventoryItem = GetDynamicItemById(dynamicItemId, out var parentInventory);
+        var inventoryItem =
+            GetDynamicItemById(dynamicItemId, out var parentInventory) as InventoryItem;
 
         if (inventoryItem == null)
         {
@@ -166,13 +168,13 @@ public sealed class InventoryManager : MonoBehaviour
 
             if (
                 dynamicItemDropTarget == null
-                || dynamicItemDropTarget is not BackpackInventoryItem backpackItem
+                || dynamicItemDropTarget is not IDynamicBackpackInventoryItem backpackItem
             )
             {
                 return false;
             }
 
-            destinationInventory = backpackItem.Inventory;
+            destinationInventory = backpackItem.Inventory as TetrisInventory;
         }
         else
         {
@@ -207,7 +209,8 @@ public sealed class InventoryManager : MonoBehaviour
         bool rotated
     )
     {
-        var inventoryItem = GetDynamicItemById(dynamicItemId, out var parentInventory);
+        var inventoryItem =
+            GetDynamicItemById(dynamicItemId, out var parentInventory) as InventoryItem;
 
         if (inventoryItem == null)
         {
@@ -222,7 +225,7 @@ public sealed class InventoryManager : MonoBehaviour
 
             if (
                 dynamicItemDropTarget == null
-                || dynamicItemDropTarget is not BackpackInventoryItem backpackItem
+                || dynamicItemDropTarget is not IDynamicBackpackInventoryItem backpackItem
             )
             {
                 return false;
@@ -233,7 +236,7 @@ public sealed class InventoryManager : MonoBehaviour
                 return false;
             }
 
-            destinationInventory = backpackItem.Inventory;
+            destinationInventory = backpackItem.Inventory as TetrisInventory;
         }
         else
         {
@@ -289,7 +292,7 @@ public sealed class InventoryManager : MonoBehaviour
         {
             var dynamicItem = GetDynamicItemById(inventoryId);
 
-            if (dynamicItem != null && dynamicItem is BackpackInventoryItem backpackItem)
+            if (dynamicItem != null && dynamicItem is IDynamicBackpackInventoryItem backpackItem)
             {
                 backpackItem.Inventory.Sort();
             }

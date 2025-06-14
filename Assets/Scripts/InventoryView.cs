@@ -43,7 +43,7 @@ public sealed class InventoryView : MonoBehaviour
 
     private VisualElement _backpackWindowsContentParentElement;
     private List<InventoryGridCollectionElement> _listOfGridCollectionElements = new();
-    private Dictionary<BackpackInventoryItem, InventoryWindowElement> _windowMap = new();
+    private Dictionary<IDynamicBackpackInventoryItem, InventoryWindowElement> _windowMap = new();
     private List<VisualElement> _pickResults = new();
 
     public InventoryGridCollectionElement Stash => _inventoryStashElement;
@@ -68,14 +68,14 @@ public sealed class InventoryView : MonoBehaviour
 
     public void OnItemRemovedEventHandler(IDynamicInventoryItem inventoryItem)
     {
-        if (inventoryItem is BackpackInventoryItem backpackItem)
+        if (inventoryItem is IDynamicBackpackInventoryItem backpackItem)
         {
             var list = new List<IDynamicInventoryItem>();
             backpackItem.Inventory.GetItemsDeeplyNonAlloc(list);
 
             for (int i = 0; i < list.Count; i++)
             {
-                if (list[i] is BackpackInventoryItem innerBackpackItem)
+                if (list[i] is IDynamicBackpackInventoryItem innerBackpackItem)
                 {
                     if (_windowMap.TryGetValue(innerBackpackItem, out var innerWindowElement))
                     {
@@ -292,13 +292,13 @@ public sealed class InventoryView : MonoBehaviour
 
             if (
                 dynamicItemDropTarget == null
-                || dynamicItemDropTarget is not BackpackInventoryItem backpackItem
+                || dynamicItemDropTarget is not IDynamicBackpackInventoryItem backpackItem
             )
             {
                 return;
             }
 
-            inventory = backpackItem.Inventory;
+            inventory = backpackItem.Inventory as TetrisInventory;
         }
         else
         {
@@ -390,8 +390,8 @@ public sealed class InventoryView : MonoBehaviour
             );
 
             if (
-                dynamicItem is BackpackInventoryItem backpackItem
-                && dynamicItem.Item is BackpackInventoryItemSO backpackStaticItem
+                dynamicItem is IDynamicBackpackInventoryItem backpackItem
+                && dynamicItem.Item is IStaticBackpackInventoryItem backpackStaticItem
             )
             {
                 if (_windowMap.TryGetValue(backpackItem, out var windowElement))
@@ -467,21 +467,21 @@ public sealed class InventoryView : MonoBehaviour
         _listOfGridCollectionElements.Reverse();
     }
 
-    private void CreateBackpackWindow(BackpackInventoryItem backpackItem, Vector2 position)
+    private void CreateBackpackWindow(IDynamicBackpackInventoryItem backpackItem, Vector2 position)
     {
-        var backpackStaticItem = backpackItem.Item as BackpackInventoryItemSO;
+        var backpackStaticItem = backpackItem.Item as IStaticBackpackInventoryItem;
 
         var windowElement = _windowUxmlPrefab.Instantiate()[0] as InventoryWindowElement;
 
         windowElement.Setup();
         windowElement.GridCollection.Setup(_cellSize);
         windowElement.GridCollection.CreateGrid(
-            backpackStaticItem.BackpackGridSize,
+            backpackStaticItem.GetBackpackInventorySize(),
             CreateCell,
             CreateItem
         );
         windowElement.GridCollection.FitWidthAndHeight();
-        windowElement.GridCollection.Bind(backpackItem.Inventory);
+        windowElement.GridCollection.Bind(backpackItem.Inventory as TetrisInventory);
         windowElement.GridCollection.Sync();
         windowElement.GridCollection.DynamicId = backpackItem.Id;
         windowElement.MakeAbsolute();
@@ -561,7 +561,7 @@ public sealed class InventoryView : MonoBehaviour
             return;
         }
 
-        if (targetDynamicItem is not BackpackInventoryItem backpackItem)
+        if (targetDynamicItem is not IDynamicBackpackInventoryItem backpackItem)
         {
             ResetDraggedElement();
             ResetColorOfAllAvailableCells();

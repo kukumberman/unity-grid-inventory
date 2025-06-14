@@ -58,8 +58,7 @@ public sealed class JsonConverterInventoryItem : JsonConverter<IDynamicInventory
         {
             var backpackInventoryItem = new BackpackInventoryItem();
             backpackInventoryItem.Inventory = new TetrisInventory(
-                backpackItem.BackpackGridSize.x,
-                backpackItem.BackpackGridSize.y
+                backpackItem.GetBackpackInventorySize()
             );
 
             var jObjectInventory = jObject[nameof(BackpackInventoryItem.Inventory)];

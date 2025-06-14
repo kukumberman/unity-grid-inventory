@@ -9,5 +9,4 @@ public sealed class BackpackInventoryItemSO : InventoryItemSO, IStaticBackpackIn
 
     public int BackpackWidth => _backpackGridSize.x;
     public int BackpackHeight => _backpackGridSize.y;
-    public Vector2Int BackpackGridSize => _backpackGridSize;
 }
